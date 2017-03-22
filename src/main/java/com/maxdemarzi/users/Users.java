@@ -28,7 +28,7 @@ public class Users {
     public Response getUser(@PathParam("username") final String username, @Context GraphDatabaseService db) throws IOException {
         Map<String, Object> results;
         try (Transaction tx = db.beginTx()) {
-            Node user = db.findNode(Labels.User, USERNAME, username);
+            Node user = findUser(username, db);
             results = user.getAllProperties();
             tx.success();
         }
@@ -66,7 +66,7 @@ public class Users {
     public Response getFollowers(@PathParam("username") final String username, @Context GraphDatabaseService db) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
         try (Transaction tx = db.beginTx()) {
-            Node user = db.findNode(Labels.User, USERNAME, username);
+            Node user = findUser(username, db);
             for (Relationship r1: user.getRelationships(Direction.INCOMING, RelationshipTypes.FOLLOWS)) {
                 Map<String, Object> follower = r1.getStartNode().getAllProperties();
                 follower.remove(PASSWORD);
@@ -82,7 +82,7 @@ public class Users {
     public Response getFollowing(@PathParam("username") final String username, @Context GraphDatabaseService db) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
         try (Transaction tx = db.beginTx()) {
-            Node user = db.findNode(Labels.User, USERNAME, username);
+            Node user = findUser(username, db);
             for (Relationship r1: user.getRelationships(Direction.OUTGOING, RelationshipTypes.FOLLOWS)) {
                 Map<String, Object> follower = r1.getEndNode().getAllProperties();
                 follower.remove(PASSWORD);
@@ -100,14 +100,21 @@ public class Users {
                                  @Context GraphDatabaseService db) throws IOException {
         Map<String, Object> results;
         try (Transaction tx = db.beginTx()) {
-            Node user = db.findNode(Labels.User, USERNAME, username);
-            Node user2 = db.findNode(Labels.User, USERNAME, username2);
+            Node user = findUser(username, db);
+            Node user2 = findUser(username2, db);
+
             user.createRelationshipTo(user2, RelationshipTypes.FOLLOWS);
             results = user2.getAllProperties();
             results.remove(PASSWORD);
             tx.success();
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
+    }
+
+    public static Node findUser(String username, @Context GraphDatabaseService db) {
+        Node user = db.findNode(Labels.User, USERNAME, username);
+        if (user == null) { throw UserExceptions.userNotFound;}
+        return user;
     }
 
 }

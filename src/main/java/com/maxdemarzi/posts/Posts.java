@@ -1,7 +1,7 @@
 package com.maxdemarzi.posts;
 
 import com.maxdemarzi.Labels;
-import com.maxdemarzi.users.UserExceptions;
+import com.maxdemarzi.users.Users;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.neo4j.graphdb.*;
 
@@ -16,7 +16,8 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import static com.maxdemarzi.Properties.*;
+import static com.maxdemarzi.Properties.STATUS;
+import static com.maxdemarzi.Properties.TIME;
 import static java.util.Collections.reverseOrder;
 
 @Path("/users/{username}/posts")
@@ -45,7 +46,7 @@ public class Posts {
         Long latest = dateTime.toEpochSecond(ZoneOffset.UTC);
 
         try (Transaction tx = db.beginTx()) {
-            Node user = db.findNode(Labels.User, USERNAME, username);
+            Node user = Users.findUser(username, db);
             int count = 0;
             while (count < limit && (dateTime.isAfter(earliest))) {
                 RelationshipType relType = RelationshipType.withName("POSTED_ON_" +
@@ -75,8 +76,7 @@ public class Posts {
         HashMap input = PostValidator.validate(body);
 
         try (Transaction tx = db.beginTx()) {
-            Node user = db.findNode(Labels.User, USERNAME, username);
-            if (user == null) { throw UserExceptions.userNotFound; }
+            Node user = Users.findUser(username, db);
             Node post = db.createNode(Labels.Post);
             post.setProperty(STATUS, input.get("status"));
             LocalDateTime dateTime = LocalDateTime.now(utc);

@@ -28,11 +28,11 @@ public class GetFollowingTest {
                     "email: 'max@neo4j.com', " +
                     "name: 'Max De Marzi'," +
                     "password: 'swordfish'})" +
-                    "CREATE (jexp:User {username:'jexp', " +
+            "CREATE (jexp:User {username:'jexp', " +
                     "email: 'michael@neo4j.com', " +
                     "name: 'Michael Hunger'," +
                     "password: 'tunafish'})" +
-                    "CREATE (max)-[:FOLLOWS]->(jexp)";
+            "CREATE (max)-[:FOLLOWS]->(jexp)";
 
     private static final ArrayList<HashMap<String, Object>> expected = new ArrayList<HashMap<String, Object>>() {{
         add(new HashMap<String, Object>() {{
