@@ -1,6 +1,9 @@
 # grittier_ext
 A Neo4j Based Twitter Clone Backend
 
+
+[![Coverage Status](https://coveralls.io/repos/github/maxdemarzi/grittier_ext/badge.svg?branch=master)](https://coveralls.io/github/maxdemarzi/grittier_ext?branch=master)
+
 # Instructions
 
 1. Build it:
