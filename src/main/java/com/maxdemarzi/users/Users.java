@@ -104,8 +104,8 @@ public class Users {
     }
 
     @POST
-    @Path("/{username}/follow/{username2}")
-    public Response createFollow(@PathParam("username") final String username,
+    @Path("/{username}/follows/{username2}")
+    public Response createFollows(@PathParam("username") final String username,
                                  @PathParam("username2") final String username2,
                                  @Context GraphDatabaseService db) throws IOException {
         Map<String, Object> results;
@@ -115,6 +115,7 @@ public class Users {
 
             user.createRelationshipTo(user2, RelationshipTypes.FOLLOWS);
             results = user2.getAllProperties();
+            results.remove(EMAIL);
             results.remove(PASSWORD);
             tx.success();
         }
