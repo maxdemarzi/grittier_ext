@@ -1,6 +1,7 @@
 # grittier_ext
 A Neo4j Based Twitter Clone Backend
 
+[![Codeship Status for maxdemarzi/grittier_ext](https://app.codeship.com/projects/50014300-f166-0134-82f1-1a55004cd4f7/status?branch=master)](https://app.codeship.com/projects/209391)
 
 [![Coverage Status](https://coveralls.io/repos/github/maxdemarzi/grittier_ext/badge.svg?branch=master)](https://coveralls.io/github/maxdemarzi/grittier_ext?branch=master)
 
