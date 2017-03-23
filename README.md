@@ -22,3 +22,27 @@ A Neo4j Based Twitter Clone Backend
 5. Create the Schema:
 
         :POST /v1/schema/create
+        
+6. API:
+         
+        :GET  /v1/users/{username}        
+        :POST /v1/users {username:'', password:'', email:'', name:''}
+        :GET  /v1/users/{username}/followers
+        :GET  /v1/users/{username}/following
+        :POST /v1/users/{username}/follows/{username2}
+        :GET  /v1/users/{username}/posts
+        :POST /v1/users/{username}/posts {status:''}
+        :POST /v1/users/{username}/posts/{username2}/{time} 
+        :GET  /v1/users/{username}/likes
+        :POST /v1/users/{username}/likes/{username2}/{time}
+        :GET  /v1/users/{username}/timeline
+        :GET  /v1/users/{username}/recommendations/friends
+        :GET  /v1/users/{username}/recommendations/follows
+        
+7. Query Parameters:
+        
+        limit=25 or any whole number
+        since=<a number representing a date in linux epoc time>
+        See https://www.epochconverter.com/
+        
+        

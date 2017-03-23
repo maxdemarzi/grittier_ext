@@ -105,7 +105,7 @@ public class Posts {
             Node post = getPost(user2, time);
 
             LocalDateTime dateTime = LocalDateTime.now(utc);
-            
+
             user.createRelationshipTo(post, RelationshipType.withName("REPOSTED_ON_" +
                     dateTime.format(dateFormatter)));
             results = post.getAllProperties();
