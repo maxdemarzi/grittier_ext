@@ -1,6 +1,7 @@
 package com.maxdemarzi.posts;
 
 import com.maxdemarzi.Labels;
+import com.maxdemarzi.RelationshipTypes;
 import com.maxdemarzi.users.Users;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.neo4j.graphdb.*;
@@ -16,8 +17,8 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import static com.maxdemarzi.Properties.STATUS;
-import static com.maxdemarzi.Properties.TIME;
+import static com.maxdemarzi.Properties.*;
+import static com.maxdemarzi.users.Users.getPost;
 import static java.util.Collections.reverseOrder;
 
 @Path("/users/{username}/posts")
@@ -90,6 +91,33 @@ public class Posts {
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
 
+    @POST
+    @Path("/{username2}/{time}")
+    public Response createRepost(@PathParam("username") final String username,
+                               @PathParam("username2") final String username2,
+                               @PathParam("time") final Long time,
+                               @Context GraphDatabaseService db) throws IOException {
+        Map<String, Object> results;
+
+        try (Transaction tx = db.beginTx()) {
+            Node user = Users.findUser(username, db);
+            Node user2 = Users.findUser(username2, db);
+            Node post = getPost(user2, time);
+
+            LocalDateTime dateTime = LocalDateTime.now(utc);
+            
+            user.createRelationshipTo(post, RelationshipType.withName("REPOSTED_ON_" +
+                    dateTime.format(dateFormatter)));
+            results = post.getAllProperties();
+            results.put(USERNAME, user2.getProperty(USERNAME));
+            results.put(NAME, user2.getProperty(NAME));
+            results.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
+            results.put(REPOSTS, post.getDegree() - 1 - post.getDegree(RelationshipTypes.LIKES));
+
+            tx.success();
+        }
+        return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
+    }
 
     public static Node getAuthor(Node post, Long time) {
         LocalDateTime postedDateTime = LocalDateTime.ofEpochSecond(time, 0, ZoneOffset.UTC);
