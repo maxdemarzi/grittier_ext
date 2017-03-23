@@ -69,5 +69,6 @@ public class GetProfileTest {
         put("likes", 1);
         put("followers", 1);
         put("following", 3);
+        put("hash", "0bd90aeb51d5982062f4f303a62df935");
     }};
 }

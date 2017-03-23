@@ -3,6 +3,7 @@ package com.maxdemarzi.users;
 import com.maxdemarzi.Labels;
 import com.maxdemarzi.RelationshipTypes;
 import com.maxdemarzi.posts.PostExceptions;
+import org.apache.shiro.crypto.hash.Md5Hash;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.neo4j.graphdb.*;
 
@@ -52,6 +53,7 @@ public class Users {
         try (Transaction tx = db.beginTx()) {
             Node user = findUser(username, db);
             results = user.getAllProperties();
+            results.put("hash", new Md5Hash(((String)results.get(EMAIL)).toLowerCase()).toString());
             results.remove(EMAIL);
             results.remove(PASSWORD);
             Integer following = user.getDegree(RelationshipTypes.FOLLOWS, Direction.OUTGOING);
