@@ -89,4 +89,12 @@ public class Posts {
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
+
+
+    public static Node getAuthor(Node post, Long time) {
+        LocalDateTime postedDateTime = LocalDateTime.ofEpochSecond(time, 0, ZoneOffset.UTC);
+        RelationshipType original = RelationshipType.withName("POSTED_ON_" +
+                postedDateTime.format(dateFormatter));
+        return post.getSingleRelationship(original, Direction.INCOMING).getStartNode();
+    }
 }

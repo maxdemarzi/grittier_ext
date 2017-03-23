@@ -17,6 +17,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static com.maxdemarzi.Properties.*;
+import static com.maxdemarzi.posts.Posts.getAuthor;
 import static java.util.Collections.reverseOrder;
 
 @Path("/users/{username}/timeline")
@@ -87,10 +88,7 @@ public class Timeline {
                                 properties.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
                                 properties.put(REPOSTS, post.getDegree() - 1 - post.getDegree(RelationshipTypes.LIKES));
 
-                                LocalDateTime postedDateTime = LocalDateTime.ofEpochSecond(time, 0, ZoneOffset.UTC);
-                                RelationshipType original = RelationshipType.withName("POSTED_ON_" +
-                                        postedDateTime.format(dateFormatter));
-                                Node author = post.getSingleRelationship(original,Direction.INCOMING).getStartNode();
+                                Node author = getAuthor(post, time);
 
                                 properties.put(USERNAME, author.getProperty(USERNAME));
                                 properties.put(NAME, author.getProperty(NAME));
@@ -98,8 +96,6 @@ public class Timeline {
                             }
                         }
                     }
-
-
                 }
                 dateTime = dateTime.minusDays(1);
             }
@@ -109,7 +105,8 @@ public class Timeline {
         results.sort(Comparator.comparing(m -> (Long) m.get("time"), reverseOrder()));
 
         return Response.ok().entity(objectMapper.writeValueAsString(
-                results.subList(0, Math.min(results.size(), limit)))
-        ).build();
+                results.subList(0, Math.min(results.size(), limit))))
+                .build();
     }
+
 }
