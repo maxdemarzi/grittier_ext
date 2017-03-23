@@ -23,7 +23,7 @@ public class UserValidator {
         // Parse the input
         try {
             input = objectMapper.readValue(body, HashMap.class);
-        } catch (Exceptions e) {
+        } catch (Exception e) {
             throw Exceptions.invalidInput;
         }
 

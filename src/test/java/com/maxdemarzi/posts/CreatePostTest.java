@@ -24,6 +24,42 @@ public class CreatePostTest {
         Assert.assertTrue(actual.containsKey("time"));
     }
 
+    @Test
+    public void shouldNotCreatePostInvalid() {
+        HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
+
+        HTTP.Response response = HTTP.POST(neo4j.httpURI().resolve("/v1/users/maxdemarzi/posts").toString());
+        HashMap actual  = response.content();
+        Assert.assertEquals(400, response.status());
+        Assert.assertEquals("Invalid Input", actual.get("error"));
+        Assert.assertFalse(actual.containsKey("status"));
+        Assert.assertFalse(actual.containsKey("time"));
+    }
+
+    @Test
+    public void shouldNotCreatePostEmpty() {
+        HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
+
+        HTTP.Response response = HTTP.POST(neo4j.httpURI().resolve("/v1/users/maxdemarzi/posts").toString(), emptyInput);
+        HashMap actual  = response.content();
+        Assert.assertEquals(400, response.status());
+        Assert.assertEquals("Empty status Parameter.", actual.get("error"));
+        Assert.assertFalse(actual.containsKey("status"));
+        Assert.assertFalse(actual.containsKey("time"));
+    }
+
+    @Test
+    public void shouldNotCreatePostMissing() {
+        HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
+
+        HTTP.Response response = HTTP.POST(neo4j.httpURI().resolve("/v1/users/maxdemarzi/posts").toString(), missingParameterInput);
+        HashMap actual  = response.content();
+        Assert.assertEquals(400, response.status());
+        Assert.assertEquals("Missing status Parameter.", actual.get("error"));
+        Assert.assertFalse(actual.containsKey("status"));
+        Assert.assertFalse(actual.containsKey("time"));
+    }
+
     private static final String FIXTURE =
             "CREATE (max:User {username:'maxdemarzi', " +
                     "email: 'maxdemarzi@hotmail.com', " +
@@ -32,6 +68,14 @@ public class CreatePostTest {
 
     private static final HashMap input = new HashMap<String, Object>() {{
         put("status", "Hello World!");
+    }};
+
+    private static final HashMap emptyInput = new HashMap<String, Object>() {{
+        put("status", "");
+    }};
+
+    private static final HashMap missingParameterInput = new HashMap<String, Object>() {{
+        put("not_status", "Hello World!");
     }};
 
     private static final HashMap expected = new HashMap<String, Object>() {{

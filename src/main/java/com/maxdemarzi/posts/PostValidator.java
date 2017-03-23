@@ -10,7 +10,6 @@ import static com.maxdemarzi.Properties.STATUS;
 
 public class PostValidator {
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final String usernamePattern = "^[a-z0-9_]{3,32}";
 
     public static HashMap validate(String body) throws IOException {
         HashMap input;
@@ -22,7 +21,7 @@ public class PostValidator {
         // Parse the input
         try {
             input = objectMapper.readValue(body, HashMap.class);
-        } catch (Exceptions e) {
+        } catch (Exception e) {
             throw Exceptions.invalidInput;
         }
 
