@@ -15,7 +15,7 @@ A Neo4j Based Twitter Clone Backend
 
 3. Configure Neo4j by adding a line to conf/neo4j.conf:
 
-        dbms.unmanaged_extension_classes=com.maxdemarzi/v1
+        dbms.unmanaged_extension_classes=com.maxdemarzi=/v1
 
 4. Start Neo4j server.
 
