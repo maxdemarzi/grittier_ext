@@ -25,7 +25,8 @@ A Neo4j Based Twitter Clone Backend
         
 6. API:
          
-        :GET  /v1/users/{username}        
+        :GET  /v1/users/{username}   
+        :GET  /v1/users/{username}/profile   
         :POST /v1/users {username:'', password:'', email:'', name:''}
         :GET  /v1/users/{username}/followers
         :GET  /v1/users/{username}/following

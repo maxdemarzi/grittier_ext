@@ -45,6 +45,28 @@ public class Users {
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
 
+    @GET
+    @Path("/{username}/profile")
+    public Response getProfile(@PathParam("username") final String username, @Context GraphDatabaseService db) throws IOException {
+        Map<String, Object> results;
+        try (Transaction tx = db.beginTx()) {
+            Node user = findUser(username, db);
+            results = user.getAllProperties();
+            results.remove(EMAIL);
+            results.remove(PASSWORD);
+            Integer following = user.getDegree(RelationshipTypes.FOLLOWS, Direction.OUTGOING);
+            Integer followers = user.getDegree(RelationshipTypes.FOLLOWS, Direction.INCOMING);
+            Integer likes = user.getDegree(RelationshipTypes.LIKES, Direction.OUTGOING);
+            Integer posts = user.getDegree(Direction.OUTGOING) - following - likes;
+            results.put("following", following);
+            results.put("followers", followers);
+            results.put("likes", likes);
+            results.put("posts", posts);
+            tx.success();
+        }
+        return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
+    }
+
     @POST
     public Response createUser(String body, @Context GraphDatabaseService db) throws IOException {
         HashMap parameters = UserValidator.validate(body);
