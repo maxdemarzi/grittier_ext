@@ -37,7 +37,6 @@ public class GetFollowersTest {
     private static final ArrayList<HashMap<String, Object>> expected = new ArrayList<HashMap<String, Object>>() {{
         add(new HashMap<String, Object>() {{
                     put("username", "jexp");
-                    put("email", "michael@neo4j.com");
                     put("name", "Michael Hunger");
             }});
         }};

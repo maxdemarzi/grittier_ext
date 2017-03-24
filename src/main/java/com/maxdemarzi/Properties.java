@@ -7,6 +7,7 @@ public final class Properties {
     }
 
     public static final String EMAIL = "email";
+    public static final String HASH = "hash";
     public static final String LIKES = "likes";
     public static final String NAME = "name";
     public static final String PASSWORD = "password";

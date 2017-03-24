@@ -83,6 +83,7 @@ public class Users {
                     user.setProperty(NAME, parameters.get(NAME));
                     user.setProperty(USERNAME, parameters.get(USERNAME));
                     user.setProperty(PASSWORD, parameters.get(PASSWORD));
+                    user.setProperty(HASH, new Md5Hash(((String)parameters.get(EMAIL)).toLowerCase()).toString());
                     results = user.getAllProperties();
                 } else {
                     throw UserExceptions.existingEmailParameter;
@@ -103,6 +104,7 @@ public class Users {
             Node user = findUser(username, db);
             for (Relationship r1: user.getRelationships(Direction.INCOMING, RelationshipTypes.FOLLOWS)) {
                 Map<String, Object> follower = r1.getStartNode().getAllProperties();
+                follower.remove(EMAIL);
                 follower.remove(PASSWORD);
                 results.add(follower);
             }
@@ -118,9 +120,10 @@ public class Users {
         try (Transaction tx = db.beginTx()) {
             Node user = findUser(username, db);
             for (Relationship r1: user.getRelationships(Direction.OUTGOING, RelationshipTypes.FOLLOWS)) {
-                Map<String, Object> follower = r1.getEndNode().getAllProperties();
-                follower.remove(PASSWORD);
-                results.add(follower);
+                Map<String, Object> following = r1.getEndNode().getAllProperties();
+                following.remove(EMAIL);
+                following.remove(PASSWORD);
+                results.add(following);
             }
             tx.success();
         }

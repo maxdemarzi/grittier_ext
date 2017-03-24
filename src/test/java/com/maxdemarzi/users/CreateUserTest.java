@@ -34,5 +34,6 @@ public class CreateUserTest {
         put("email", "maxdemarzi@hotmail.com");
         put("name", "Max De Marzi");
         put("password", "swordfish");
+        put("hash","58750f2179edbd650b471280aa66fee5");
     }};
 }
