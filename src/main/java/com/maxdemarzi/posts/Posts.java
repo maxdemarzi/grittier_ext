@@ -86,6 +86,8 @@ public class Posts {
             user.createRelationshipTo(post, RelationshipType.withName("POSTED_ON_" +
                             dateTime.format(dateFormatter)));
             results = post.getAllProperties();
+            results.put(USERNAME, username);
+            results.put(NAME, user.getProperty(NAME));
             tx.success();
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
