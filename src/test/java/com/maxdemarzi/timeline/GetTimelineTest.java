@@ -47,14 +47,17 @@ public class GetTimelineTest {
     private static final String FIXTURE =
             "CREATE (max:User {username:'maxdemarzi', " +
                     "email: 'max@neo4j.com', " +
+                    "hash: 'hash', " +
                     "name: 'Max De Marzi'," +
                     "password: 'swordfish'})" +
             "CREATE (jexp:User {username:'jexp', " +
                     "email: 'michael@neo4j.com', " +
+                    "hash: 'hash', " +
                     "name: 'Michael Hunger'," +
                     "password: 'tunafish'})" +
             "CREATE (laeg:User {username:'laexample', " +
                     "email: 'luke@neo4j.com', " +
+                    "hash: 'hash', " +
                     "name: 'Luke Gannon'," +
                     "password: 'cuddlefish'})" +
 
@@ -77,6 +80,7 @@ public class GetTimelineTest {
         add(new HashMap<String, Object>() {{
             put("username", "maxdemarzi");
             put("name", "Max De Marzi");
+            put("hash", "hash");
             put("status", "Doing fine!");
             put("time", 1490208800);
             put("likes", 0);
@@ -85,6 +89,7 @@ public class GetTimelineTest {
         add(new HashMap<String, Object>() {{
             put("username", "laexample");
             put("name", "Luke Gannon");
+            put("hash", "hash");
             put("status", "How are you!");
             put("time", 1490208700);
             put("likes", 0);
@@ -93,6 +98,7 @@ public class GetTimelineTest {
         add(new HashMap<String, Object>() {{
             put("reposter_username", "laexample");
             put("reposter_name", "Luke Gannon");
+            put("hash", "hash");
             put("username", "jexp");
             put("name", "Michael Hunger");
             put("status", "Hello World!");
@@ -105,6 +111,7 @@ public class GetTimelineTest {
     private static final HashMap<String, Object> unReposted = new HashMap<String, Object>() {{
             put("username", "jexp");
             put("name", "Michael Hunger");
+            put("hash", "hash");
             put("status", "Hello World!");
             put("time", 1490140299);
             put("likes", 1);

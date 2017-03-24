@@ -48,6 +48,7 @@ public class Posts {
 
         try (Transaction tx = db.beginTx()) {
             Node user = Users.findUser(username, db);
+            Map userProperties = user.getAllProperties();
             int count = 0;
             while (count < limit && (dateTime.isAfter(earliest))) {
                 RelationshipType relType = RelationshipType.withName("POSTED_ON_" +
@@ -56,6 +57,9 @@ public class Posts {
                 for (Relationship r1 : user.getRelationships(Direction.OUTGOING, relType)) {
                     Map<String, Object> post = r1.getEndNode().getAllProperties();
                     if((Long)post.get("time") < latest) {
+                        post.put(USERNAME, username);
+                        post.put(NAME, userProperties.get(NAME));
+                        post.put(HASH, userProperties.get(HASH));
                         results.add(post);
                         count++;
                     }

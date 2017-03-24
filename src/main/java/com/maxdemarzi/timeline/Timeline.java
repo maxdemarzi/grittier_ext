@@ -61,16 +61,16 @@ public class Timeline {
                         dateTime.format(dateFormatter));
 
                 for (Node follow : follows) {
-                    String followUsername = (String)follow.getProperty(USERNAME);
-                    String followName = (String)follow.getProperty(NAME);
+                    Map followProperties = follow.getAllProperties();
 
                     for (Relationship r1 : follow.getRelationships(Direction.OUTGOING, posted)) {
                         Node post = r1.getEndNode();
                         if(seen.add(post.getId())) {
                             Map<String, Object> properties = r1.getEndNode().getAllProperties();
                             if ((Long) properties.get("time") < latest) {
-                                properties.put(USERNAME, followUsername);
-                                properties.put(NAME, followName);
+                                properties.put(USERNAME, followProperties.get(USERNAME));
+                                properties.put(NAME, followProperties.get(NAME));
+                                properties.put(HASH, followProperties.get(HASH));
                                 properties.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
                                 properties.put(REPOSTS, post.getDegree() - 1 - post.getDegree(RelationshipTypes.LIKES));
                                 results.add(properties);
@@ -84,8 +84,9 @@ public class Timeline {
                             Map<String, Object> properties = r1.getEndNode().getAllProperties();
                             Long time = (Long)properties.get("time");
                             if (time < latest) {
-                                properties.put(REPOSTERUSERNAME, followUsername);
-                                properties.put(REPOSTERNAME, followName);
+                                properties.put(REPOSTERUSERNAME, followProperties.get(USERNAME));
+                                properties.put(REPOSTERNAME, followProperties.get(NAME));
+                                properties.put(HASH, followProperties.get(HASH));
                                 properties.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
                                 properties.put(REPOSTS, post.getDegree() - 1 - post.getDegree(RelationshipTypes.LIKES));
 

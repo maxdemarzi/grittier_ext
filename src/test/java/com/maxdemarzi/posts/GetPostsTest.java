@@ -47,6 +47,7 @@ public class GetPostsTest {
     private static final String FIXTURE =
             "CREATE (max:User {username:'maxdemarzi', " +
                     "email: 'max@neo4j.com', " +
+                    "hash: 'hash', " +
                     "name: 'Max De Marzi'," +
                     "password: 'swordfish'})" +
                     "CREATE (post1:Post {status:'Hello World!', " +
@@ -60,10 +61,16 @@ public class GetPostsTest {
         add(new HashMap<String, Object>() {{
             put("status", "How are you!");
             put("time", 1490208700);
+            put("name", "Max De Marzi");
+            put("username", "maxdemarzi");
+            put("hash", "hash");
         }});
         add(new HashMap<String, Object>() {{
             put("status", "Hello World!");
             put("time", 1490140299);
+            put("name", "Max De Marzi");
+            put("username", "maxdemarzi");
+            put("hash", "hash");
         }});
     }};
 }
