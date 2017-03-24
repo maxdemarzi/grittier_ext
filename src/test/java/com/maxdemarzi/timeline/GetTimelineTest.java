@@ -65,12 +65,23 @@ public class GetTimelineTest {
                     "time: 1490140299})" +
             "CREATE (post2:Post {status:'How are you!', " +
                     "time: 1490208700})" +
+            "CREATE (post3:Post {status:'Doing fine!', " +
+                    "time: 1490208800})" +
             "CREATE (jexp)-[:POSTED_ON_2017_03_21]->(post1)" +
             "CREATE (laeg)-[:POSTED_ON_2017_03_22]->(post2)" +
+            "CREATE (max)-[:POSTED_ON_2017_03_22]->(post3)" +
             "CREATE (laeg)-[:LIKES]->(post1)" +
             "CREATE (laeg)-[:REPOSTED_ON_2017_03_22]->(post1)";
 
     private static final ArrayList<HashMap<String, Object>> expected = new ArrayList<HashMap<String, Object>>() {{
+        add(new HashMap<String, Object>() {{
+            put("username", "maxdemarzi");
+            put("name", "Max De Marzi");
+            put("status", "Doing fine!");
+            put("time", 1490208800);
+            put("likes", 0);
+            put("reposts", 0);
+        }});
         add(new HashMap<String, Object>() {{
             put("username", "laexample");
             put("name", "Luke Gannon");

@@ -49,6 +49,7 @@ public class Timeline {
             Node user = Users.findUser(username, db);
             HashSet<Long> seen = new HashSet<>();
             ArrayList<Node> follows = new ArrayList<>();
+            follows.add(user); // Adding user to see their posts on timeline as well
             for (Relationship r : user.getRelationships(Direction.OUTGOING, RelationshipTypes.FOLLOWS)) {
                 follows.add(r.getEndNode());
             }
