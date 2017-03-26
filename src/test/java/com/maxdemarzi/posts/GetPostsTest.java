@@ -64,6 +64,8 @@ public class GetPostsTest {
             put("name", "Max De Marzi");
             put("username", "maxdemarzi");
             put("hash", "hash");
+            put("reposts", 0);
+            put("likes", 0);
         }});
         add(new HashMap<String, Object>() {{
             put("status", "Hello World!");
@@ -71,6 +73,9 @@ public class GetPostsTest {
             put("name", "Max De Marzi");
             put("username", "maxdemarzi");
             put("hash", "hash");
+            put("reposts", 0);
+            put("likes", 0);
+
         }});
     }};
 }

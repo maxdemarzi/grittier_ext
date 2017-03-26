@@ -55,12 +55,16 @@ public class Posts {
                         dateTime.format(dateFormatter));
 
                 for (Relationship r1 : user.getRelationships(Direction.OUTGOING, relType)) {
-                    Map<String, Object> post = r1.getEndNode().getAllProperties();
-                    if((Long)post.get("time") < latest) {
-                        post.put(USERNAME, username);
-                        post.put(NAME, userProperties.get(NAME));
-                        post.put(HASH, userProperties.get(HASH));
-                        results.add(post);
+                    Node post = r1.getEndNode();
+                    Map<String, Object> result = post.getAllProperties();
+                    if((Long)result.get("time") < latest) {
+                        result.put(USERNAME, username);
+                        result.put(NAME, userProperties.get(NAME));
+                        result.put(HASH, userProperties.get(HASH));
+                        result.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
+                        result.put(REPOSTS, post.getDegree() - 1 - post.getDegree(RelationshipTypes.LIKES));
+
+                        results.add(result);
                         count++;
                     }
                 }
