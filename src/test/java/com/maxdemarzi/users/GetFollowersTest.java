@@ -36,8 +36,12 @@ public class GetFollowersTest {
 
     private static final ArrayList<HashMap<String, Object>> expected = new ArrayList<HashMap<String, Object>>() {{
         add(new HashMap<String, Object>() {{
-                    put("username", "jexp");
-                    put("name", "Michael Hunger");
+            put("username", "jexp");
+            put("name", "Michael Hunger");
+            put("followers", 0);
+            put("following", 1);
+            put("posts", 0);
+            put("likes", 0);
             }});
         }};
 }

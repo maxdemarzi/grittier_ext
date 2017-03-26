@@ -28,7 +28,8 @@ public class GetProfileTest {
             "CREATE (max:User {username:'maxdemarzi', " +
                     "email: 'max@neo4j.com', " +
                     "name: 'Max De Marzi'," +
-                    "password: 'swordfish'})" +
+                    "password: 'swordfish'," +
+                    "hash: '0bd90aeb51d5982062f4f303a62df935'})" +
             "CREATE (jexp:User {username:'jexp', " +
                     "email: 'michael@neo4j.com', " +
                     "name: 'Michael Hunger'," +

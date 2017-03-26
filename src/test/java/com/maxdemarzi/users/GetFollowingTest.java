@@ -38,6 +38,11 @@ public class GetFollowingTest {
         add(new HashMap<String, Object>() {{
             put("username", "jexp");
             put("name", "Michael Hunger");
+            put("followers", 1);
+            put("following", 0);
+            put("posts", 0);
+            put("likes", 0);
+
         }});
     }};
 }

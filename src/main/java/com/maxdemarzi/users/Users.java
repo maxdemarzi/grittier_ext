@@ -52,18 +52,7 @@ public class Users {
         Map<String, Object> results;
         try (Transaction tx = db.beginTx()) {
             Node user = findUser(username, db);
-            results = user.getAllProperties();
-            results.put("hash", new Md5Hash(((String)results.get(EMAIL)).toLowerCase()).toString());
-            results.remove(EMAIL);
-            results.remove(PASSWORD);
-            Integer following = user.getDegree(RelationshipTypes.FOLLOWS, Direction.OUTGOING);
-            Integer followers = user.getDegree(RelationshipTypes.FOLLOWS, Direction.INCOMING);
-            Integer likes = user.getDegree(RelationshipTypes.LIKES, Direction.OUTGOING);
-            Integer posts = user.getDegree(Direction.OUTGOING) - following - likes;
-            results.put("following", following);
-            results.put("followers", followers);
-            results.put("likes", likes);
-            results.put("posts", posts);
+            results = getUserAttributes(user);
             tx.success();
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
@@ -103,10 +92,9 @@ public class Users {
         try (Transaction tx = db.beginTx()) {
             Node user = findUser(username, db);
             for (Relationship r1: user.getRelationships(Direction.INCOMING, RelationshipTypes.FOLLOWS)) {
-                Map<String, Object> follower = r1.getStartNode().getAllProperties();
-                follower.remove(EMAIL);
-                follower.remove(PASSWORD);
-                results.add(follower);
+                Node follower = r1.getStartNode();
+                Map<String, Object> result = getUserAttributes(follower);
+                results.add(result);
             }
             tx.success();
         }
@@ -120,10 +108,9 @@ public class Users {
         try (Transaction tx = db.beginTx()) {
             Node user = findUser(username, db);
             for (Relationship r1: user.getRelationships(Direction.OUTGOING, RelationshipTypes.FOLLOWS)) {
-                Map<String, Object> following = r1.getEndNode().getAllProperties();
-                following.remove(EMAIL);
-                following.remove(PASSWORD);
-                results.add(following);
+                Node following = r1.getEndNode();
+                Map<String, Object> result = getUserAttributes(following);
+                results.add(result);
             }
             tx.success();
         }
@@ -153,6 +140,22 @@ public class Users {
         Node user = db.findNode(Labels.User, USERNAME, username);
         if (user == null) { throw UserExceptions.userNotFound;}
         return user;
+    }
+
+    private Map<String, Object> getUserAttributes(Node user) {
+        Map<String, Object> results;
+        results = user.getAllProperties();
+        results.remove(EMAIL);
+        results.remove(PASSWORD);
+        Integer following = user.getDegree(RelationshipTypes.FOLLOWS, Direction.OUTGOING);
+        Integer followers = user.getDegree(RelationshipTypes.FOLLOWS, Direction.INCOMING);
+        Integer likes = user.getDegree(RelationshipTypes.LIKES, Direction.OUTGOING);
+        Integer posts = user.getDegree(Direction.OUTGOING) - following - likes;
+        results.put("following", following);
+        results.put("followers", followers);
+        results.put("likes", likes);
+        results.put("posts", posts);
+        return results;
     }
 
     public static Node getPost(Node author, Long time) {
