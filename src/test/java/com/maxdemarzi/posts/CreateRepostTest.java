@@ -20,6 +20,7 @@ public class CreateRepostTest {
 
         HTTP.Response response = HTTP.POST(neo4j.httpURI().resolve("/v1/users/maxdemarzi/posts/jexp/1490140299").toString());
         HashMap actual  = response.content();
+        expected.put("reposted_time", actual.get("reposted_time"));
         Assert.assertEquals(expected, actual);
     }
 

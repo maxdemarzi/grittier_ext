@@ -32,7 +32,7 @@ public class GetFollowingTest {
                     "email: 'michael@neo4j.com', " +
                     "name: 'Michael Hunger'," +
                     "password: 'tunafish'})" +
-            "CREATE (max)-[:FOLLOWS]->(jexp)";
+            "CREATE (max)-[:FOLLOWS {time:1490140299}]->(jexp)";
 
     private static final ArrayList<HashMap<String, Object>> expected = new ArrayList<HashMap<String, Object>>() {{
         add(new HashMap<String, Object>() {{
@@ -42,7 +42,7 @@ public class GetFollowingTest {
             put("following", 0);
             put("posts", 0);
             put("likes", 0);
-
+            put("time", 1490140299);
         }});
     }};
 }

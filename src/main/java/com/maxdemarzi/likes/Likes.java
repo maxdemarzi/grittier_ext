@@ -52,9 +52,10 @@ public class Likes {
             for (Relationship r1 : user.getRelationships(Direction.OUTGOING, RelationshipTypes.LIKES)) {
                 Node post = r1.getEndNode();
                 Map<String, Object> properties = post.getAllProperties();
-                Long time = (Long)properties.get("time");
+                Long time = (Long)r1.getProperty("time");
                 if(time < latest) {
-                    Node author = getAuthor(post, time);
+                    Node author = getAuthor(post, (Long)properties.get(TIME));
+                    properties.put(LIKEDTIME, time);
                     properties.put(USERNAME, author.getProperty(USERNAME));
                     properties.put(NAME, author.getProperty(NAME));
                     properties.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
@@ -66,7 +67,7 @@ public class Likes {
             tx.success();
         }
 
-        results.sort(Comparator.comparing(m -> (Long) m.get("time"), reverseOrder()));
+        results.sort(Comparator.comparing(m -> (Long) m.get(LIKEDTIME), reverseOrder()));
 
         return Response.ok().entity(objectMapper.writeValueAsString(
                 results.subList(0, Math.min(results.size(), limit))))
@@ -85,7 +86,9 @@ public class Likes {
             Node user = Users.findUser(username, db);
             Node user2 = Users.findUser(username2, db);
             Node post = getPost(user2, time);
-            user.createRelationshipTo(post, RelationshipTypes.LIKES);
+            Relationship like = user.createRelationshipTo(post, RelationshipTypes.LIKES);
+            LocalDateTime dateTime = LocalDateTime.now(utc);
+            like.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
             results = post.getAllProperties();
             results.put(USERNAME, user2.getProperty(USERNAME));
             results.put(NAME, user2.getProperty(NAME));

@@ -70,11 +70,11 @@ public class GetTimelineTest {
                     "time: 1490208700})" +
             "CREATE (post3:Post {status:'Doing fine!', " +
                     "time: 1490208800})" +
-            "CREATE (jexp)-[:POSTED_ON_2017_03_21]->(post1)" +
-            "CREATE (laeg)-[:POSTED_ON_2017_03_22]->(post2)" +
-            "CREATE (max)-[:POSTED_ON_2017_03_22]->(post3)" +
-            "CREATE (laeg)-[:LIKES]->(post1)" +
-            "CREATE (laeg)-[:REPOSTED_ON_2017_03_22]->(post1)";
+            "CREATE (jexp)-[:POSTED_ON_2017_03_21 {time: 1490140299}]->(post1)" +
+            "CREATE (laeg)-[:POSTED_ON_2017_03_22 {time: 1490208700}]->(post2)" +
+            "CREATE (max)-[:POSTED_ON_2017_03_22 {time: 1490208800}]->(post3)" +
+            "CREATE (laeg)-[:LIKES {time:1490143299}]->(post1)" +
+            "CREATE (laeg)-[:REPOSTED_ON_2017_03_22 {time:1490208000}]->(post1)";
 
     private static final ArrayList<HashMap<String, Object>> expected = new ArrayList<HashMap<String, Object>>() {{
         add(new HashMap<String, Object>() {{
@@ -98,6 +98,7 @@ public class GetTimelineTest {
         add(new HashMap<String, Object>() {{
             put("reposter_username", "laexample");
             put("reposter_name", "Luke Gannon");
+            put("reposted_time",1490208000);
             put("hash", "hash");
             put("username", "jexp");
             put("name", "Michael Hunger");

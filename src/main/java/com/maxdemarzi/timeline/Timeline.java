@@ -66,8 +66,10 @@ public class Timeline {
                     for (Relationship r1 : follow.getRelationships(Direction.OUTGOING, posted)) {
                         Node post = r1.getEndNode();
                         if(seen.add(post.getId())) {
+                            Long time = (Long)r1.getProperty("time");
                             Map<String, Object> properties = r1.getEndNode().getAllProperties();
-                            if ((Long) properties.get("time") < latest) {
+                            if (time < latest) {
+                                properties.put(TIME, time);
                                 properties.put(USERNAME, followProperties.get(USERNAME));
                                 properties.put(NAME, followProperties.get(NAME));
                                 properties.put(HASH, followProperties.get(HASH));
@@ -82,15 +84,16 @@ public class Timeline {
                         Node post = r1.getEndNode();
                         if(seen.add(post.getId())) {
                             Map<String, Object> properties = r1.getEndNode().getAllProperties();
-                            Long time = (Long)properties.get("time");
-                            if (time < latest) {
+                            Long reposted_time = (Long)r1.getProperty(TIME);
+                            if (reposted_time < latest) {
+                                properties.put(REPOSTEDTIME, reposted_time);
                                 properties.put(REPOSTERUSERNAME, followProperties.get(USERNAME));
                                 properties.put(REPOSTERNAME, followProperties.get(NAME));
                                 properties.put(HASH, followProperties.get(HASH));
                                 properties.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
                                 properties.put(REPOSTS, post.getDegree() - 1 - post.getDegree(RelationshipTypes.LIKES));
 
-                                Node author = getAuthor(post, time);
+                                Node author = getAuthor(post, (Long)properties.get(TIME));
 
                                 properties.put(USERNAME, author.getProperty(USERNAME));
                                 properties.put(NAME, author.getProperty(NAME));

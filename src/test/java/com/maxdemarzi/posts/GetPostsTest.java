@@ -54,8 +54,8 @@ public class GetPostsTest {
                     "time: 1490140299})" +
                     "CREATE (post2:Post {status:'How are you!', " +
                     "time: 1490208700})" +
-                    "CREATE (max)-[:POSTED_ON_2017_03_21]->(post1)" +
-                    "CREATE (max)-[:POSTED_ON_2017_03_22]->(post2)";
+                    "CREATE (max)-[:POSTED_ON_2017_03_21 {time: 1490140299}]->(post1)" +
+                    "CREATE (max)-[:POSTED_ON_2017_03_22 {time: 1490208700}]->(post2)";
 
     private static final ArrayList<HashMap<String, Object>> expected = new ArrayList<HashMap<String, Object>>() {{
         add(new HashMap<String, Object>() {{
@@ -75,7 +75,6 @@ public class GetPostsTest {
             put("hash", "hash");
             put("reposts", 0);
             put("likes", 0);
-
         }});
     }};
 }

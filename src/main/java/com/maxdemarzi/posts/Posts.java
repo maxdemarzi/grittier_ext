@@ -57,7 +57,9 @@ public class Posts {
                 for (Relationship r1 : user.getRelationships(Direction.OUTGOING, relType)) {
                     Node post = r1.getEndNode();
                     Map<String, Object> result = post.getAllProperties();
-                    if((Long)result.get("time") < latest) {
+                    Long time = (Long)r1.getProperty("time");
+                    if(time < latest) {
+                        result.put(TIME, time);
                         result.put(USERNAME, username);
                         result.put(NAME, userProperties.get(NAME));
                         result.put(HASH, userProperties.get(HASH));
@@ -73,7 +75,7 @@ public class Posts {
             tx.success();
         }
 
-        results.sort(Comparator.comparing(m -> (Long) m.get("time"), reverseOrder()));
+        results.sort(Comparator.comparing(m -> (Long) m.get(TIME), reverseOrder()));
 
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
@@ -89,11 +91,12 @@ public class Posts {
             Node post = db.createNode(Labels.Post);
             post.setProperty(STATUS, input.get("status"));
             LocalDateTime dateTime = LocalDateTime.now(utc);
-            post.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
 
-            user.createRelationshipTo(post, RelationshipType.withName("POSTED_ON_" +
+            Relationship r1 = user.createRelationshipTo(post, RelationshipType.withName("POSTED_ON_" +
                             dateTime.format(dateFormatter)));
+            r1.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
             results = post.getAllProperties();
+            results.put(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
             results.put(USERNAME, username);
             results.put(NAME, user.getProperty(NAME));
             tx.success();
@@ -116,9 +119,12 @@ public class Posts {
 
             LocalDateTime dateTime = LocalDateTime.now(utc);
 
-            user.createRelationshipTo(post, RelationshipType.withName("REPOSTED_ON_" +
+            Relationship r1 = user.createRelationshipTo(post, RelationshipType.withName("REPOSTED_ON_" +
                     dateTime.format(dateFormatter)));
+            r1.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
             results = post.getAllProperties();
+            results.put(REPOSTEDTIME, dateTime.toEpochSecond(ZoneOffset.UTC));
+            results.put(TIME, time);
             results.put(USERNAME, user2.getProperty(USERNAME));
             results.put(NAME, user2.getProperty(NAME));
             results.put(LIKES, post.getDegree(RelationshipTypes.LIKES));

@@ -18,12 +18,10 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TimeZone;
+import java.util.*;
 
 import static com.maxdemarzi.Properties.*;
+import static java.util.Collections.reverseOrder;
 
 @Path("/users")
 public class Users {
@@ -93,11 +91,14 @@ public class Users {
             Node user = findUser(username, db);
             for (Relationship r1: user.getRelationships(Direction.INCOMING, RelationshipTypes.FOLLOWS)) {
                 Node follower = r1.getStartNode();
+                Long time = (Long)r1.getProperty(TIME);
                 Map<String, Object> result = getUserAttributes(follower);
+                result.put(TIME, time);
                 results.add(result);
             }
             tx.success();
         }
+        results.sort(Comparator.comparing(m -> (Long) m.get(TIME), reverseOrder()));
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
 
@@ -109,11 +110,14 @@ public class Users {
             Node user = findUser(username, db);
             for (Relationship r1: user.getRelationships(Direction.OUTGOING, RelationshipTypes.FOLLOWS)) {
                 Node following = r1.getEndNode();
+                Long time = (Long)r1.getProperty(TIME);
                 Map<String, Object> result = getUserAttributes(following);
+                result.put(TIME, time);
                 results.add(result);
             }
             tx.success();
         }
+        results.sort(Comparator.comparing(m -> (Long) m.get(TIME), reverseOrder()));
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
 
@@ -127,7 +131,9 @@ public class Users {
             Node user = findUser(username, db);
             Node user2 = findUser(username2, db);
 
-            user.createRelationshipTo(user2, RelationshipTypes.FOLLOWS);
+            Relationship follows =  user.createRelationshipTo(user2, RelationshipTypes.FOLLOWS);
+            LocalDateTime dateTime = LocalDateTime.now(utc);
+            follows.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
             results = user2.getAllProperties();
             results.remove(EMAIL);
             results.remove(PASSWORD);

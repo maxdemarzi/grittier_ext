@@ -38,7 +38,7 @@ public class GetLikesTest {
     public void shouldGetLikesSince() {
         HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
 
-        HTTP.Response response = HTTP.GET(neo4j.httpURI().resolve("/v1/users/maxdemarzi/likes?since=1490140300").toString());
+        HTTP.Response response = HTTP.GET(neo4j.httpURI().resolve("/v1/users/maxdemarzi/likes?since=1490209400").toString());
         ArrayList<HashMap> actual  = response.content();
         Assert.assertTrue(actual.size() == 1);
         Assert.assertEquals(expected.get(1), actual.get(0));
@@ -61,11 +61,11 @@ public class GetLikesTest {
                     "time: 1490140299})" +
             "CREATE (post2:Post {status:'How are you!', " +
                     "time: 1490208700})" +
-            "CREATE (jexp)-[:POSTED_ON_2017_03_21]->(post1)" +
-            "CREATE (laeg)-[:POSTED_ON_2017_03_22]->(post2)" +
-            "CREATE (laeg)-[:REPOSTED_ON_2017_03_22]->(post1)" +
-            "CREATE (max)-[:LIKES]->(post1)" +
-            "CREATE (max)-[:LIKES]->(post2)" ;
+            "CREATE (jexp)-[:POSTED_ON_2017_03_21 {time: 1490140299}]->(post1)" +
+            "CREATE (laeg)-[:POSTED_ON_2017_03_22 {time: 1490208700}]->(post2)" +
+            "CREATE (laeg)-[:REPOSTED_ON_2017_03_22 {time: 1490208800}]->(post1)" +
+            "CREATE (max)-[:LIKES {time: 1490209300 }]->(post1)" +
+            "CREATE (max)-[:LIKES {time: 1490209400 }]->(post2)" ;
 
     private static final ArrayList<HashMap<String, Object>> expected = new ArrayList<HashMap<String, Object>>() {{
         add(new HashMap<String, Object>() {{
@@ -73,6 +73,7 @@ public class GetLikesTest {
             put("name", "Luke Gannon");
             put("status", "How are you!");
             put("time", 1490208700);
+            put("liked_time", 1490209400);
             put("likes", 1);
             put("reposts", 0);
         }});
@@ -81,6 +82,7 @@ public class GetLikesTest {
             put("name", "Michael Hunger");
             put("status", "Hello World!");
             put("time", 1490140299);
+            put("liked_time", 1490209300);
             put("likes", 1);
             put("reposts", 1);
         }});

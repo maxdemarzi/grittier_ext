@@ -9,10 +9,12 @@ public final class Properties {
     public static final String EMAIL = "email";
     public static final String HASH = "hash";
     public static final String LIKES = "likes";
+    public static final String LIKEDTIME = "liked_time";
     public static final String NAME = "name";
     public static final String PASSWORD = "password";
     public static final String USERNAME = "username";
     public static final String REPOSTS = "reposts";
+    public static final String REPOSTEDTIME = "reposted_time";
     public static final String REPOSTERNAME = "reposter_name";
     public static final String REPOSTERUSERNAME = "reposter_username";
     public static final String STATUS = "status";
