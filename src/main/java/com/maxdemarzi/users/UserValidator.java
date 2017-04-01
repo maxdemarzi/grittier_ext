@@ -48,6 +48,24 @@ public class UserValidator {
                 throw UserExceptions.invalidEmailParameter;
             }
         }
-        return input;
+
+        if (!input.containsKey(NAME)) {
+            throw UserExceptions.missingNameParameter;
+        } else {
+            String email = (String) input.get(NAME);
+            if (email.equals("")) {
+                throw UserExceptions.emptyNameParameter;
+            }
+        }
+
+        if (!input.containsKey(PASSWORD)) {
+            throw UserExceptions.missingPasswordParameter;
+        } else {
+            String email = (String) input.get(PASSWORD);
+            if (email.equals("")) {
+                throw UserExceptions.emptyPasswordParameter;
+            }
+        }
+                return input;
     }
 }

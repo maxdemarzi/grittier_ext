@@ -14,6 +14,12 @@ public class UserExceptions extends Exceptions {
     public static final Exceptions invalidEmailParameter = new Exceptions(400, "Invalid email Parameter.");
     public static final Exceptions existingEmailParameter = new Exceptions(400, "Existing email Parameter.");
 
+    public static final Exceptions missingNameParameter = new Exceptions(400, "Missing name Parameter.");
+    public static final Exceptions emptyNameParameter = new Exceptions(400, "Empty name Parameter.");
+
+    public static final Exceptions missingPasswordParameter = new Exceptions(400, "Missing password Parameter.");
+    public static final Exceptions emptyPasswordParameter = new Exceptions(400, "Empty password Parameter.");
+
     public static final Exceptions userNotFound = new Exceptions(400, "User not Found.");
 
     private UserExceptions(int code, String error) {
