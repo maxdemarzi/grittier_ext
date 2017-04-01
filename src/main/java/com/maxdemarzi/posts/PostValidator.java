@@ -11,8 +11,8 @@ import static com.maxdemarzi.Properties.STATUS;
 public class PostValidator {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static HashMap validate(String body) throws IOException {
-        HashMap input;
+    static HashMap<String, Object> validate(String body) throws IOException {
+        HashMap<String, Object> input;
 
         if ( body == null) {
             throw Exceptions.invalidInput;
@@ -33,7 +33,6 @@ public class PostValidator {
                 throw PostExceptions.emptyStatusParameter;
             }
         }
-
 
         return input;
     }

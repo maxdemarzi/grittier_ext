@@ -15,22 +15,23 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 import static com.maxdemarzi.Properties.*;
+import static com.maxdemarzi.Time.dateFormatter;
+import static com.maxdemarzi.Time.utc;
 import static java.util.Collections.reverseOrder;
 
 @Path("/users")
 public class Users {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final ZoneId utc = TimeZone.getTimeZone("UTC").toZoneId();
-    private static final DateTimeFormatter dateFormatter = DateTimeFormatter
-            .ofPattern("yyyy_MM_dd")
-            .withZone(utc);
+    private static final Pattern usernamePattern = Pattern.compile("@(\\S+)");
 
     @GET
     @Path("/{username}")

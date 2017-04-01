@@ -11,15 +11,13 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.TimeZone;
 
 import static com.maxdemarzi.Properties.*;
+import static com.maxdemarzi.Time.utc;
 import static com.maxdemarzi.posts.Posts.getAuthor;
 import static com.maxdemarzi.users.Users.getPost;
 import static java.util.Collections.reverseOrder;
@@ -28,10 +26,6 @@ import static java.util.Collections.reverseOrder;
 public class Likes {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final ZoneId utc = TimeZone.getTimeZone("UTC").toZoneId();
-    private static final DateTimeFormatter dateFormatter = DateTimeFormatter
-            .ofPattern("yyyy_MM_dd")
-            .withZone(utc);
 
     @GET
     public Response getLikes(@PathParam("username") final String username,

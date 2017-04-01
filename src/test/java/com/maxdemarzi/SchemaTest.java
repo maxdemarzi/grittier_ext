@@ -22,6 +22,7 @@ public class SchemaTest {
 
     private static final ArrayList expected = new ArrayList<String>() {{
         add("(:User {username}) constraint created");
+        add("(:Tag {name}) constraint created");
         add("Schema Created");
     }};
 }

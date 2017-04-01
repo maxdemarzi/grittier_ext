@@ -1,6 +1,7 @@
 package com.maxdemarzi.users;
 
 import com.maxdemarzi.Exceptions;
+import com.maxdemarzi.TestThing;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -31,18 +32,6 @@ public class UserExceptionsTest {
             TestThing testThing = new TestThing(exception);
             thrown.expect(Exceptions.class);
             testThing.chuck();
-        }
-
-    }
-
-    private class TestThing {
-        private Exceptions e;
-
-        TestThing(Exceptions e) {
-            this.e = e;
-        }
-        void chuck() {
-            throw e;
         }
     }
 }

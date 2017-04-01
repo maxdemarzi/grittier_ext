@@ -2,6 +2,7 @@ package com.maxdemarzi.posts;
 
 import com.maxdemarzi.Labels;
 import com.maxdemarzi.RelationshipTypes;
+import com.maxdemarzi.tags.Tags;
 import com.maxdemarzi.users.Users;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.neo4j.graphdb.*;
@@ -12,12 +13,16 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.maxdemarzi.Properties.*;
+import static com.maxdemarzi.Time.dateFormatter;
+import static com.maxdemarzi.Time.earliest;
+import static com.maxdemarzi.Time.utc;
 import static com.maxdemarzi.users.Users.getPost;
 import static java.util.Collections.reverseOrder;
 
@@ -25,12 +30,6 @@ import static java.util.Collections.reverseOrder;
 public class Posts {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final ZoneId utc = TimeZone.getTimeZone("UTC").toZoneId();
-    private static final DateTimeFormatter dateFormatter = DateTimeFormatter
-            .ofPattern("yyyy_MM_dd")
-            .withZone(utc);
-
-    private static final LocalDateTime earliest = LocalDateTime.of(2017,3,20,0,0,0);
 
     @GET
     public Response getPosts(@PathParam("username") final String username,
@@ -64,7 +63,10 @@ public class Posts {
                         result.put(NAME, userProperties.get(NAME));
                         result.put(HASH, userProperties.get(HASH));
                         result.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
-                        result.put(REPOSTS, post.getDegree() - 1 - post.getDegree(RelationshipTypes.LIKES));
+                        result.put(REPOSTS, post.getDegree(Direction.INCOMING)
+                                - 1 // for the Posted Relationship Type
+                                - post.getDegree(RelationshipTypes.LIKES)
+                                - post.getDegree(RelationshipTypes.REPLIED_TO));
 
                         results.add(result);
                         count++;
@@ -84,25 +86,65 @@ public class Posts {
     public Response createPost(String body, @PathParam("username") final String username,
                                @Context GraphDatabaseService db) throws IOException {
         Map<String, Object> results;
-        HashMap input = PostValidator.validate(body);
+        HashMap<String, Object> input = PostValidator.validate(body);
+        LocalDateTime dateTime = LocalDateTime.now(utc);
 
         try (Transaction tx = db.beginTx()) {
             Node user = Users.findUser(username, db);
-            Node post = db.createNode(Labels.Post);
-            post.setProperty(STATUS, input.get("status"));
-            LocalDateTime dateTime = LocalDateTime.now(utc);
-
-            Relationship r1 = user.createRelationshipTo(post, RelationshipType.withName("POSTED_ON_" +
-                            dateTime.format(dateFormatter)));
-            r1.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
+            Node post = createPost(db, input, user, dateTime);
             results = post.getAllProperties();
-            results.put(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
             results.put(USERNAME, username);
             results.put(NAME, user.getProperty(NAME));
+            results.put(REPOSTS, 0);
+            results.put(LIKES, 0);
+
             tx.success();
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
+
+    private Node createPost(@Context GraphDatabaseService db, HashMap input, Node user, LocalDateTime dateTime) {
+        Node post = db.createNode(Labels.Post);
+        post.setProperty(STATUS, input.get("status"));
+        post.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
+        Relationship r1 = user.createRelationshipTo(post, RelationshipType.withName("POSTED_ON_" +
+                        dateTime.format(dateFormatter)));
+        r1.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
+        Tags.createTags(post, input, dateTime, db);
+        return post;
+    }
+
+    @POST
+    @Path("/{username2}/{time}/reply")
+    public Response createReply(String body, @PathParam("username") final String username,
+                                 @PathParam("username2") final String username2,
+                                 @PathParam("time") final Long time,
+                                 @Context GraphDatabaseService db) throws IOException {
+
+        Map<String, Object> results;
+        HashMap input = PostValidator.validate(body);
+        LocalDateTime dateTime = LocalDateTime.now(utc);
+
+        try (Transaction tx = db.beginTx()) {
+            Node user = Users.findUser(username, db);
+            Node post = createPost(db, input, user, dateTime);
+            results = post.getAllProperties();
+            results.put(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
+            results.put(USERNAME, username);
+            results.put(NAME, user.getProperty(NAME));
+            results.put(REPOSTS, 0);
+            results.put(LIKES, 0);
+
+            Node user2 = Users.findUser(username2, db);
+            Node post2 = getPost(user2, time);
+            Relationship r2 = post.createRelationshipTo(post2, RelationshipTypes.REPLIED_TO);
+            r2.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
+
+            tx.success();
+        }
+        return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
+    }
+
 
     @POST
     @Path("/{username2}/{time}")
@@ -128,7 +170,10 @@ public class Posts {
             results.put(USERNAME, user2.getProperty(USERNAME));
             results.put(NAME, user2.getProperty(NAME));
             results.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
-            results.put(REPOSTS, post.getDegree() - 1 - post.getDegree(RelationshipTypes.LIKES));
+            results.put(REPOSTS, post.getDegree(Direction.INCOMING)
+                    - 1 // for the Posted Relationship Type
+                    - post.getDegree(RelationshipTypes.LIKES)
+                    - post.getDegree(RelationshipTypes.REPLIED_TO));
 
             tx.success();
         }

@@ -32,6 +32,17 @@ public class Schema {
                 }
             }
 
+            try (Transaction tx = db.beginTx()) {
+                org.neo4j.graphdb.schema.Schema schema = db.schema();
+                if (!schema.getConstraints(Labels.Tag).iterator().hasNext()) {
+                    schema.constraintFor(Labels.Tag)
+                            .assertPropertyIsUnique("name")
+                            .create();
+                    tx.success();
+                    results.add("(:Tag {name}) constraint created");
+                }
+            }
+
             results.add("Schema Created");
             return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
         }
