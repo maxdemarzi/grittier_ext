@@ -9,6 +9,8 @@ import org.neo4j.test.server.HTTP;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import static com.maxdemarzi.Properties.*;
+
 public class GetTagTest {
     @Rule
     public Neo4jRule neo4j = new Neo4jRule()
@@ -44,6 +46,19 @@ public class GetTagTest {
         Assert.assertEquals(expected.get(1), actual.get(0));
     }
 
+    @Test
+    public void shouldNotGetTagNotFound() {
+        HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
+
+        HTTP.Response response = HTTP.GET(neo4j.httpURI().resolve("/v1/tags/notneo4j").toString());
+        HashMap actual  = response.content();
+        Assert.assertEquals(400, response.status());
+        Assert.assertEquals("Tag Not Found.", actual.get("error"));
+        Assert.assertFalse(actual.containsKey(USERNAME));
+        Assert.assertFalse(actual.containsKey(EMAIL));
+        Assert.assertFalse(actual.containsKey(NAME));
+        Assert.assertFalse(actual.containsKey(STATUS));
+    }
     private static final String FIXTURE =
             "CREATE (max:User {username:'maxdemarzi', " +
                     "email: 'max@neo4j.com', " +
