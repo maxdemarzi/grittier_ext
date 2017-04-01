@@ -61,7 +61,7 @@ public class Tags {
                     for (Relationship r1 : tag.getRelationships(Direction.INCOMING, relType)) {
                         Node post = r1.getStartNode();
                         Map<String, Object> result = post.getAllProperties();
-                        Long time = (Long) r1.getProperty("time");
+                        Long time = (Long) result.get("time");
 
                         if (count < limit && time < latest) {
                             Node author = getAuthor(post, time);
