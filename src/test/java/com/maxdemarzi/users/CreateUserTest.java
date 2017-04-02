@@ -13,6 +13,7 @@ import static com.maxdemarzi.Properties.*;
 public class CreateUserTest {
     @Rule
     public Neo4jRule neo4j = new Neo4jRule()
+            .withFixture(FIXTURE)
             .withExtension("/v1", Users.class);
 
     @Test
@@ -178,6 +179,40 @@ public class CreateUserTest {
         Assert.assertFalse(actual.containsKey(PASSWORD));
     }
 
+    @Test
+    public void shouldNotCreateUserExistingUsername() {
+        HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
+
+        HTTP.Response response = HTTP.POST(neo4j.httpURI().resolve("/v1/users").toString(), existingUsernameInput);
+        HashMap actual  = response.content();
+        Assert.assertEquals(400, response.status());
+        Assert.assertEquals("Empty password Parameter.", actual.get("error"));
+        Assert.assertFalse(actual.containsKey(USERNAME));
+        Assert.assertFalse(actual.containsKey(EMAIL));
+        Assert.assertFalse(actual.containsKey(NAME));
+        Assert.assertFalse(actual.containsKey(PASSWORD));
+    }
+
+    @Test
+    public void shouldNotCreateUserExistingEmail() {
+        HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
+
+        HTTP.Response response = HTTP.POST(neo4j.httpURI().resolve("/v1/users").toString(), existingEmailInput);
+        HashMap actual  = response.content();
+        Assert.assertEquals(400, response.status());
+        Assert.assertEquals("Empty password Parameter.", actual.get("error"));
+        Assert.assertFalse(actual.containsKey(USERNAME));
+        Assert.assertFalse(actual.containsKey(EMAIL));
+        Assert.assertFalse(actual.containsKey(NAME));
+        Assert.assertFalse(actual.containsKey(PASSWORD));
+    }
+
+    private static final String FIXTURE =
+            "CREATE (max:User {username:'jexp', " +
+                    "email: 'michael@neo4j.com', " +
+                    "name: 'Michael Hunger'," +
+                    "password: 'tunafish'})";
+
     private static final HashMap input = new HashMap<String, Object>() {{
         put("username", "maxdemarzi");
         put("email", "maxdemarzi@hotmail.com");
@@ -234,6 +269,20 @@ public class CreateUserTest {
         put("username", "maxdemarzi");
         put("email", "maxdemarzi@hotmail.com");
         put("name", "Max De Marzi");
+        put("password", "");
+    }};
+
+    private static final HashMap existingUsernameInput = new HashMap<String, Object>() {{
+        put("username", "jexp");
+        put("email", "michael@hotmail.com");
+        put("name", "Michael Hunger");
+        put("password", "");
+    }};
+
+    private static final HashMap existingEmailInput = new HashMap<String, Object>() {{
+        put("username", "jexp2");
+        put("email", "michael@neo4j.com");
+        put("name", "Michael Hunger");
         put("password", "");
     }};
     private static final HashMap expected = new HashMap<String, Object>() {{
