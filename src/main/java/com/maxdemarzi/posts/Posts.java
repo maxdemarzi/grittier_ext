@@ -2,6 +2,7 @@ package com.maxdemarzi.posts;
 
 import com.maxdemarzi.Labels;
 import com.maxdemarzi.RelationshipTypes;
+import com.maxdemarzi.mentions.Mentions;
 import com.maxdemarzi.tags.Tags;
 import com.maxdemarzi.users.Users;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -20,9 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.maxdemarzi.Properties.*;
-import static com.maxdemarzi.Time.dateFormatter;
-import static com.maxdemarzi.Time.earliest;
-import static com.maxdemarzi.Time.utc;
+import static com.maxdemarzi.Time.*;
 import static com.maxdemarzi.users.Users.getPost;
 import static java.util.Collections.reverseOrder;
 
@@ -111,6 +110,7 @@ public class Posts {
                         dateTime.format(dateFormatter)));
         r1.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
         Tags.createTags(post, input, dateTime, db);
+        Mentions.createMentions(post, input, dateTime, db);
         return post;
     }
 

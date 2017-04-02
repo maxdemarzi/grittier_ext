@@ -52,6 +52,7 @@ public class Likes {
                     properties.put(LIKEDTIME, time);
                     properties.put(USERNAME, author.getProperty(USERNAME));
                     properties.put(NAME, author.getProperty(NAME));
+                    properties.put(HASH, author.getProperty(HASH));
                     properties.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
                     properties.put(REPOSTS, post.getDegree() - 1 - post.getDegree(RelationshipTypes.LIKES));
 
