@@ -22,6 +22,14 @@ public class RemoveFollowsTest {
         thrown.expect(UniformInterfaceException.class);
         HTTP.request("DELETE", neo4j.httpURI().resolve("/v1/users/maxdemarzi/follows/jexp").toString(), null);
     }
+
+    @Test
+    public void shouldRemoveFollowsToo() {
+        HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
+        thrown.expect(UniformInterfaceException.class);
+        HTTP.request("DELETE", neo4j.httpURI().resolve("/v1/users/laexample/follows/markhneedham").toString(), null);
+    }
+
     private static final String FIXTURE =
             "CREATE (max:User {username:'maxdemarzi', " +
                     "email: 'max@neo4j.com', " +
@@ -31,5 +39,17 @@ public class RemoveFollowsTest {
                     "email: 'michael@neo4j.com', " +
                     "name: 'Michael Hunger'," +
                     "password: 'tunafish'})" +
-            "CREATE (max)-[:FOLLOWS {time:1490140299}]->(jexp)";
+            "CREATE (laeg:User {username:'laexample', " +
+                    "email: 'luke@neo4j.com', " +
+                    "hash: 'hash', " +
+                    "name: 'Luke Gannon'," +
+                    "password: 'cuddlefish'})" +
+            "CREATE (mark:User {username:'markhneedham', " +
+                    "email: 'mark@neo4j.com', " +
+                    "name: 'Mark Needham'," +
+                    "password: 'jellyfish'})" +
+            "CREATE (max)-[:FOLLOWS {time:1490140299}]->(jexp)" +
+            "CREATE (max)-[:FOLLOWS {time:1490140299}]->(mark)" +
+            "CREATE (jexp)-[:FOLLOWS {time:1490140299}]->(mark)" +
+            "CREATE (laeg)-[:FOLLOWS {time:1490140299}]->(mark)";
 }

@@ -27,6 +27,13 @@ public class RemoveBlocksTest {
     }
 
     @Test
+    public void shouldRemoveBlockToo() {
+        HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
+        thrown.expect(UniformInterfaceException.class);
+        HTTP.request("DELETE", neo4j.httpURI().resolve("/v1/users/jexp/blocks/laexample").toString(), null);
+    }
+
+    @Test
     public void shouldNotRemoveBlockUserNotFound() {
         HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
 
@@ -72,5 +79,12 @@ public class RemoveBlocksTest {
                     "name: 'Luke Gannon'," +
                     "hash: '0bd90aeb51d5982062f4f303a62df935'," +
                     "password: 'cuddlefish'})" +
-            "CREATE (max)-[:BLOCKS {time:1490140299}]->(jexp)";
+            "CREATE (mark:User {username:'markhneedham', " +
+                    "email: 'mark@neo4j.com', " +
+                    "hash: '0bd90aeb51d5982062f4f303a62df935'," +
+                    "name: 'Mark Needham'," +
+                    "password: 'jellyfish'})" +
+            "CREATE (max)-[:BLOCKS {time:1490140299}]->(jexp)" +
+            "CREATE (mark)-[:BLOCKS {time:1490140299}]->(laeg)" +
+            "CREATE (jexp)-[:BLOCKS {time:1490140299}]->(laeg)";
 }
