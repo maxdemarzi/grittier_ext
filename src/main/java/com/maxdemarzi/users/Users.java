@@ -14,10 +14,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static com.maxdemarzi.Properties.*;
@@ -130,6 +127,15 @@ public class Users {
             Node user = findUser(username, db);
             Node user2 = findUser(username2, db);
 
+            HashSet<Node> blocked = new HashSet<>();
+            for (Relationship r1 : user2.getRelationships(Direction.OUTGOING, RelationshipTypes.BLOCKS)) {
+                blocked.add(r1.getEndNode());
+            }
+
+            if ( blocked.contains(user)) {
+                throw UserExceptions.userBlocked;
+            }
+
             Relationship follows =  user.createRelationshipTo(user2, RelationshipTypes.FOLLOWS);
             LocalDateTime dateTime = LocalDateTime.now(utc);
             follows.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
@@ -177,7 +183,7 @@ public class Users {
         return user;
     }
 
-    private Map<String, Object> getUserAttributes(Node user) {
+    public static Map<String, Object> getUserAttributes(Node user) {
         Map<String, Object> results;
         results = user.getAllProperties();
         results.remove(EMAIL);

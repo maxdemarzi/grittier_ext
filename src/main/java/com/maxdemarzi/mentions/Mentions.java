@@ -13,10 +13,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,6 +45,12 @@ public class Mentions {
 
         try (Transaction tx = db.beginTx()) {
             Node user = Users.findUser(username, db);
+
+            HashSet<Node> blocked = new HashSet<>();
+            for (Relationship r1 : user.getRelationships(Direction.OUTGOING, RelationshipTypes.BLOCKS)) {
+                blocked.add(r1.getEndNode());
+            }
+
             int count = 0;
             while (count < limit && (dateTime.isAfter(earliest))) {
                 RelationshipType relType = RelationshipType.withName("MENTIONED_ON_" +
@@ -59,18 +62,20 @@ public class Mentions {
                     Long time = (Long)r1.getProperty("time");
                     if(time < latest) {
                         Node author = getAuthor(post, time);
-                        result.put(TIME, time);
-                        result.put(USERNAME, author.getProperty(USERNAME));
-                        result.put(NAME, author.getProperty(NAME));
-                        result.put(HASH, author.getProperty(HASH));
-                        result.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
-                        result.put(REPOSTS, post.getDegree(Direction.INCOMING)
-                                - 1 // for the Posted Relationship Type
-                                - post.getDegree(RelationshipTypes.LIKES)
-                                - post.getDegree(RelationshipTypes.REPLIED_TO));
+                        if (!blocked.contains(author)) {
+                            result.put(TIME, time);
+                            result.put(USERNAME, author.getProperty(USERNAME));
+                            result.put(NAME, author.getProperty(NAME));
+                            result.put(HASH, author.getProperty(HASH));
+                            result.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
+                            result.put(REPOSTS, post.getDegree(Direction.INCOMING)
+                                    - 1 // for the Posted Relationship Type
+                                    - post.getDegree(RelationshipTypes.LIKES)
+                                    - post.getDegree(RelationshipTypes.REPLIED_TO));
 
-                        results.add(result);
-                        count++;
+                            results.add(result);
+                            count++;
+                        }
                     }
                 }
                 dateTime = dateTime.minusDays(1);

@@ -1,4 +1,4 @@
-package com.maxdemarzi.users;
+package com.maxdemarzi.blocks;
 
 import org.junit.Assert;
 import org.junit.Rule;
@@ -11,29 +11,29 @@ import java.util.HashMap;
 import static com.maxdemarzi.Properties.NAME;
 import static com.maxdemarzi.Properties.USERNAME;
 
-public class CreateFollowsTest {
+public class CreateBlocksTest {
     @Rule
     public Neo4jRule neo4j = new Neo4jRule()
             .withFixture(FIXTURE)
-            .withExtension("/v1", Users.class);
+            .withExtension("/v1", Blocks.class);
 
     @Test
-    public void shouldCreateFollows() {
+    public void shouldCreateBlocks() {
         HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
 
-        HTTP.Response response = HTTP.POST(neo4j.httpURI().resolve("/v1/users/maxdemarzi/follows/jexp").toString());
+        HTTP.Response response = HTTP.POST(neo4j.httpURI().resolve("/v1/users/maxdemarzi/blocks/jexp").toString());
         HashMap actual  = response.content();
         Assert.assertEquals(expected, actual);
     }
 
     @Test
-    public void shouldNotCreateFollowsBlocked() {
+    public void shouldNotCreateBlocksAlreadyBlocking() {
         HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
 
-        HTTP.Response response = HTTP.POST(neo4j.httpURI().resolve("/v1/users/maxdemarzi/follows/laexample").toString());
+        HTTP.Response response = HTTP.POST(neo4j.httpURI().resolve("/v1/users/maxdemarzi/blocks/laexample").toString());
         HashMap actual  = response.content();
         Assert.assertEquals(400, response.status());
-        Assert.assertEquals("Cannot follow blocked User.", actual.get("error"));
+        Assert.assertEquals("Already blocking User.", actual.get("error"));
         Assert.assertFalse(actual.containsKey(USERNAME));
         Assert.assertFalse(actual.containsKey(NAME));
     }
@@ -52,7 +52,8 @@ public class CreateFollowsTest {
                     "hash: 'hash', " +
                     "name: 'Luke Gannon'," +
                     "password: 'cuddlefish'})" +
-            "CREATE (laeg)-[:BLOCKS {time:1490140299}]->(max)";
+            "CREATE (max)-[:FOLLOWS {time:1490140299}]->(jexp)" +
+            "CREATE (max)-[:BLOCKS {time:1490140299}]->(laeg)";
 
     private static final HashMap<String, Object> expected = new HashMap<String, Object>() {{
         put("username", "jexp");

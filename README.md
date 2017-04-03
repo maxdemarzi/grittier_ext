@@ -38,6 +38,9 @@ A Neo4j Based Twitter Clone Backend
         :GET    /v1/users/{username}/likes
         :POST   /v1/users/{username}/likes/{username2}/{time}
         :DELETE /v1/users/{username}/likes/{username2}/{time}
+        :GET    /v1/users/{username}/blocks
+        :POST   /v1/users/{username}/blocks/{username2}
+        :DELETE /v1/users/{username}/blocks/{username2}
         :GET    /v1/users/{username}/mentions
         :GET    /v1/users/{username}/timeline
         :GET    /v1/users/{username}/recommendations/friends

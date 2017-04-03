@@ -21,6 +21,7 @@ public class UserExceptions extends Exceptions {
     public static final Exceptions emptyPasswordParameter = new Exceptions(400, "Empty password Parameter.");
 
     public static final Exceptions userNotFound = new Exceptions(400, "User not Found.");
+    public static final Exceptions userBlocked = new Exceptions(400, "Cannot follow blocked User.");
 
     private UserExceptions(int code, String error) {
         super(code, error);
