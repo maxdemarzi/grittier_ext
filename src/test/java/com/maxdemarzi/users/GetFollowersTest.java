@@ -23,21 +23,61 @@ public class GetFollowersTest {
         ArrayList<HashMap> actual  = response.content();
         Assert.assertEquals(expected, actual);
     }
+
+    @Test
+    public void shouldGetFollowersLimited() {
+        HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
+
+        HTTP.Response response = HTTP.GET(neo4j.httpURI().resolve("/v1/users/maxdemarzi/followers?limit=1").toString());
+        ArrayList<HashMap> actual  = response.content();
+        Assert.assertTrue(actual.size() == 1);
+        Assert.assertEquals(expected.get(0), actual.get(0));
+    }
+
+    @Test
+    public void shouldGetFollowersSince() {
+        HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
+
+        HTTP.Response response = HTTP.GET(neo4j.httpURI().resolve("/v1/users/maxdemarzi/followers?since=1490140300").toString());
+        ArrayList<HashMap> actual  = response.content();
+        Assert.assertTrue(actual.size() == 1);
+        Assert.assertEquals(expected.get(1), actual.get(0));
+    }
+
     private static final String FIXTURE =
             "CREATE (max:User {username:'maxdemarzi', " +
                     "email: 'max@neo4j.com', " +
                     "name: 'Max De Marzi'," +
+                    "hash: '0bd90aeb51d5982062f4f303a62df935'," +
                     "password: 'swordfish'})" +
             "CREATE (jexp:User {username:'jexp', " +
                     "email: 'michael@neo4j.com', " +
                     "name: 'Michael Hunger'," +
+                    "hash: '0bd90aeb51d5982062f4f303a62df935'," +
                     "password: 'tunafish'})" +
-            "CREATE (max)<-[:FOLLOWS {time:1490140299}]-(jexp)";
+            "CREATE (laeg:User {username:'laexample', " +
+                    "email: 'luke@neo4j.com', " +
+                    "name: 'Luke Gannon'," +
+                    "hash: '0bd90aeb51d5982062f4f303a62df935'," +
+                    "password: 'cuddlefish'})" +
+            "CREATE (max)<-[:FOLLOWS {time:1490140299}]-(jexp)" +
+            "CREATE (max)<-[:FOLLOWS {time:1490155000}]-(laeg)";
 
     private static final ArrayList<HashMap<String, Object>> expected = new ArrayList<HashMap<String, Object>>() {{
         add(new HashMap<String, Object>() {{
+            put("username", "laexample");
+            put("name", "Luke Gannon");
+            put("hash", "0bd90aeb51d5982062f4f303a62df935");
+            put("followers", 0);
+            put("following", 1);
+            put("posts", 0);
+            put("likes", 0);
+            put("time", 1490155000);
+        }});
+        add(new HashMap<String, Object>() {{
             put("username", "jexp");
             put("name", "Michael Hunger");
+            put("hash", "0bd90aeb51d5982062f4f303a62df935");
             put("followers", 0);
             put("following", 1);
             put("posts", 0);

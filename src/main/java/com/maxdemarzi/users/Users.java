@@ -81,40 +81,74 @@ public class Users {
 
     @GET
     @Path("/{username}/followers")
-    public Response getFollowers(@PathParam("username") final String username, @Context GraphDatabaseService db) throws IOException {
+    public Response getFollowers(@PathParam("username") final String username,
+                                 @QueryParam("limit") @DefaultValue("25") final Integer limit,
+                                 @QueryParam("since") final Long since,
+                                 @Context GraphDatabaseService db) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
+        // TODO: 4/3/17 Add Recent Array for Users with > 100k Followers 
+        LocalDateTime dateTime;
+        if (since == null) {
+            dateTime = LocalDateTime.now(utc);
+        } else {
+            dateTime = LocalDateTime.ofEpochSecond(since, 0, ZoneOffset.UTC);
+        }
+        Long latest = dateTime.toEpochSecond(ZoneOffset.UTC);
+
         try (Transaction tx = db.beginTx()) {
             Node user = findUser(username, db);
             for (Relationship r1: user.getRelationships(Direction.INCOMING, RelationshipTypes.FOLLOWS)) {
-                Node follower = r1.getStartNode();
                 Long time = (Long)r1.getProperty(TIME);
-                Map<String, Object> result = getUserAttributes(follower);
-                result.put(TIME, time);
-                results.add(result);
+                if(time < latest) {
+                    Node follower = r1.getStartNode();
+                    Map<String, Object> result = getUserAttributes(follower);
+                    result.put(TIME, time);
+                    results.add(result);
+                }
             }
             tx.success();
         }
         results.sort(Comparator.comparing(m -> (Long) m.get(TIME), reverseOrder()));
-        return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
+
+        return Response.ok().entity(objectMapper.writeValueAsString(
+                results.subList(0, Math.min(results.size(), limit))))
+                .build();
     }
 
     @GET
     @Path("/{username}/following")
-    public Response getFollowing(@PathParam("username") final String username, @Context GraphDatabaseService db) throws IOException {
+    public Response getFollowing(@PathParam("username") final String username,
+                                 @QueryParam("limit") @DefaultValue("25") final Integer limit,
+                                 @QueryParam("since") final Long since,
+                                 @Context GraphDatabaseService db) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
+        LocalDateTime dateTime;
+        if (since == null) {
+            dateTime = LocalDateTime.now(utc);
+        } else {
+            dateTime = LocalDateTime.ofEpochSecond(since, 0, ZoneOffset.UTC);
+        }
+        Long latest = dateTime.toEpochSecond(ZoneOffset.UTC);
+
+
         try (Transaction tx = db.beginTx()) {
             Node user = findUser(username, db);
             for (Relationship r1: user.getRelationships(Direction.OUTGOING, RelationshipTypes.FOLLOWS)) {
-                Node following = r1.getEndNode();
                 Long time = (Long)r1.getProperty(TIME);
-                Map<String, Object> result = getUserAttributes(following);
-                result.put(TIME, time);
-                results.add(result);
+                if(time < latest) {
+                    Node following = r1.getEndNode();
+                    Map<String, Object> result = getUserAttributes(following);
+                    result.put(TIME, time);
+                    results.add(result);
+                }
             }
             tx.success();
         }
         results.sort(Comparator.comparing(m -> (Long) m.get(TIME), reverseOrder()));
-        return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
+
+        return Response.ok().entity(objectMapper.writeValueAsString(
+                results.subList(0, Math.min(results.size(), limit))))
+                .build();
     }
 
     @POST
