@@ -7,10 +7,8 @@ import org.apache.shiro.crypto.hash.Md5Hash;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.neo4j.graphdb.*;
 
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
+import javax.ws.rs.*;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -141,6 +139,36 @@ public class Users {
             tx.success();
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
+    }
+
+    @DELETE
+    @Path("/{username}/follows/{username2}")
+    public Response removeFollows(@PathParam("username") final String username,
+                                  @PathParam("username2") final String username2,
+                                  @Context GraphDatabaseService db) throws IOException {
+        Map<String, Object> results;
+        try (Transaction tx = db.beginTx()) {
+            Node user = findUser(username, db);
+            Node user2 = findUser(username2, db);
+
+            if (user.getDegree(RelationshipTypes.FOLLOWS, Direction.OUTGOING)
+                    < user2.getDegree(RelationshipTypes.FOLLOWS, Direction.INCOMING)) {
+                for (Relationship r1: user.getRelationships(Direction.OUTGOING, RelationshipTypes.FOLLOWS) ) {
+                    if (r1.getEndNode().equals(user2)) {
+                        r1.delete();
+                    }
+                }
+            } else {
+                for (Relationship r1 : user2.getRelationships(Direction.INCOMING, RelationshipTypes.FOLLOWS)) {
+                    if (r1.getStartNode().equals(user)) {
+                        r1.delete();
+                    }
+                }
+            }
+
+            tx.success();
+        }
+        return Response.noContent().build();
     }
 
     public static Node findUser(String username, @Context GraphDatabaseService db) {
