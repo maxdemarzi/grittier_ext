@@ -186,7 +186,7 @@ public class CreateUserTest {
         HTTP.Response response = HTTP.POST(neo4j.httpURI().resolve("/v1/users").toString(), existingUsernameInput);
         HashMap actual  = response.content();
         Assert.assertEquals(400, response.status());
-        Assert.assertEquals("Empty password Parameter.", actual.get("error"));
+        Assert.assertEquals("Existing username Parameter.", actual.get("error"));
         Assert.assertFalse(actual.containsKey(USERNAME));
         Assert.assertFalse(actual.containsKey(EMAIL));
         Assert.assertFalse(actual.containsKey(NAME));
@@ -200,7 +200,7 @@ public class CreateUserTest {
         HTTP.Response response = HTTP.POST(neo4j.httpURI().resolve("/v1/users").toString(), existingEmailInput);
         HashMap actual  = response.content();
         Assert.assertEquals(400, response.status());
-        Assert.assertEquals("Empty password Parameter.", actual.get("error"));
+        Assert.assertEquals("Existing email Parameter.", actual.get("error"));
         Assert.assertFalse(actual.containsKey(USERNAME));
         Assert.assertFalse(actual.containsKey(EMAIL));
         Assert.assertFalse(actual.containsKey(NAME));
@@ -276,14 +276,14 @@ public class CreateUserTest {
         put("username", "jexp");
         put("email", "michael@hotmail.com");
         put("name", "Michael Hunger");
-        put("password", "");
+        put("password", "password");
     }};
 
     private static final HashMap existingEmailInput = new HashMap<String, Object>() {{
         put("username", "jexp2");
         put("email", "michael@neo4j.com");
         put("name", "Michael Hunger");
-        put("password", "");
+        put("password", "password");
     }};
     private static final HashMap expected = new HashMap<String, Object>() {{
         put("username", "maxdemarzi");
