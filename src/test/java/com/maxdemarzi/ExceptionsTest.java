@@ -18,14 +18,4 @@ public class ExceptionsTest {
 
     }
 
-    private class TestThing {
-        private Exceptions e;
-
-        TestThing(Exceptions e) {
-            this.e = e;
-        }
-        void chuck() {
-            throw e;
-        }
-    }
 }

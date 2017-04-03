@@ -25,22 +25,23 @@ A Neo4j Based Twitter Clone Backend
         
 6. API:
          
-        :GET  /v1/users/{username}   
-        :GET  /v1/users/{username}/profile   
-        :POST /v1/users {username:'', password:'', email:'', name:''}
-        :GET  /v1/users/{username}/followers
-        :GET  /v1/users/{username}/following
-        :POST /v1/users/{username}/follows/{username2}
-        :GET  /v1/users/{username}/posts
-        :POST /v1/users/{username}/posts {status:''}
-        :POST /v1/users/{username}/posts/{username2}/{time} 
-        :GET  /v1/users/{username}/likes
-        :POST /v1/users/{username}/likes/{username2}/{time}
-        :GET  /v1/users/{username}/mentions
-        :GET  /v1/users/{username}/timeline
-        :GET  /v1/users/{username}/recommendations/friends
-        :GET  /v1/users/{username}/recommendations/follows
-        :GET  /v1/tags/{tag}
+        :GET    /v1/users/{username}   
+        :GET    /v1/users/{username}/profile   
+        :POST   /v1/users {username:'', password:'', email:'', name:''}
+        :GET    /v1/users/{username}/followers
+        :GET    /v1/users/{username}/following
+        :POST   /v1/users/{username}/follows/{username2}
+        :GET    /v1/users/{username}/posts
+        :POST   /v1/users/{username}/posts {status:''}
+        :POST   /v1/users/{username}/posts/{username2}/{time} 
+        :GET    /v1/users/{username}/likes
+        :POST   /v1/users/{username}/likes/{username2}/{time}
+        :DELETE /v1/users/{username}/likes/{username2}/{time}
+        :GET    /v1/users/{username}/mentions
+        :GET    /v1/users/{username}/timeline
+        :GET    /v1/users/{username}/recommendations/friends
+        :GET    /v1/users/{username}/recommendations/follows
+        :GET    /v1/tags/{tag}
         
         
 7. Query Parameters:

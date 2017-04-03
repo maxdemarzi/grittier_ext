@@ -94,4 +94,28 @@ public class Likes {
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
+
+    @DELETE
+    @Path("/{username2}/{time}")
+    public Response removeLike(@PathParam("username") final String username,
+                               @PathParam("username2") final String username2,
+                               @PathParam("time") final Long time,
+                               @Context GraphDatabaseService db) throws IOException {
+
+        try (Transaction tx = db.beginTx()) {
+            Node user = Users.findUser(username, db);
+            Node user2 = Users.findUser(username2, db);
+            Node post = getPost(user2, time);
+
+            for (Relationship r1 : user.getRelationships(Direction.OUTGOING, RelationshipTypes.LIKES)) {
+                if (r1.getEndNode().equals(post)) {
+                    r1.delete();
+                    break;
+                }
+            }
+
+            tx.success();
+        }
+        return Response.noContent().build();
+    }
 }
