@@ -285,6 +285,7 @@ public class CreateUserTest {
         put("name", "Michael Hunger");
         put("password", "password");
     }};
+
     private static final HashMap expected = new HashMap<String, Object>() {{
         put("username", "maxdemarzi");
         put("email", "maxdemarzi@hotmail.com");

@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.regex.Pattern;
 
 import static com.maxdemarzi.Properties.*;
 import static com.maxdemarzi.Time.dateFormatter;
@@ -26,7 +25,6 @@ import static java.util.Collections.reverseOrder;
 public class Users {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final Pattern usernamePattern = Pattern.compile("@(\\S+)");
 
     @GET
     @Path("/{username}")
@@ -86,7 +84,7 @@ public class Users {
                                  @QueryParam("since") final Long since,
                                  @Context GraphDatabaseService db) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
-        // TODO: 4/3/17 Add Recent Array for Users with > 100k Followers 
+        // TODO: 4/3/17 Add Recent Array for Users with > 100k Followers
         LocalDateTime dateTime;
         if (since == null) {
             dateTime = LocalDateTime.now(utc);
@@ -213,7 +211,7 @@ public class Users {
 
     public static Node findUser(String username, @Context GraphDatabaseService db) {
         Node user = db.findNode(Labels.User, USERNAME, username);
-        if (user == null) { throw UserExceptions.userNotFound;}
+        if (user == null) { throw UserExceptions.userNotFound; }
         return user;
     }
 

@@ -29,21 +29,37 @@ public class Blocks {
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @GET
-    public Response getBlocks(@PathParam("username") final String username, @Context GraphDatabaseService db) throws IOException {
+    public Response getBlocks(@PathParam("username") final String username,
+                              @QueryParam("limit") @DefaultValue("25") final Integer limit,
+                              @QueryParam("since") final Long since,
+                              @Context GraphDatabaseService db) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
+        LocalDateTime dateTime;
+        if (since == null) {
+            dateTime = LocalDateTime.now(utc);
+        } else {
+            dateTime = LocalDateTime.ofEpochSecond(since, 0, ZoneOffset.UTC);
+        }
+        Long latest = dateTime.toEpochSecond(ZoneOffset.UTC);
+
         try (Transaction tx = db.beginTx()) {
             Node user = findUser(username, db);
             for (Relationship r1: user.getRelationships(Direction.OUTGOING, RelationshipTypes.BLOCKS)) {
                 Node blocked = r1.getEndNode();
-                Long time = (Long)r1.getProperty(TIME);
-                Map<String, Object> result = getUserAttributes(blocked);
-                result.put(TIME, time);
-                results.add(result);
+                Long time = (Long)r1.getProperty("time");
+                if(time < latest) {
+                    Map<String, Object> result = getUserAttributes(blocked);
+                    result.put(TIME, time);
+                    results.add(result);
+                }
             }
             tx.success();
         }
         results.sort(Comparator.comparing(m -> (Long) m.get(TIME), reverseOrder()));
-        return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
+        return Response.ok().entity(objectMapper.writeValueAsString(
+                results.subList(0, Math.min(results.size(), limit))))
+                .build();
+
     }
 
     @POST
