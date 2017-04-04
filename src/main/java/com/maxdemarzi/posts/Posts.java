@@ -114,6 +114,33 @@ public class Posts {
         return post;
     }
 
+
+    @PUT
+    @Path("/{time}")
+    public Response updatePost(String body,
+                               @PathParam("username") final String username,
+                               @PathParam("time") final Long time,
+                               @Context GraphDatabaseService db) throws IOException {
+        Map<String, Object> results;
+        HashMap<String, Object> input = PostValidator.validate(body);
+
+        try (Transaction tx = db.beginTx()) {
+            Node user = Users.findUser(username, db);
+            Node post = getPost(user, time);
+            post.setProperty(STATUS, input.get(STATUS));
+            results = post.getAllProperties();
+            results.put(USERNAME, username);
+            results.put(NAME, user.getProperty(NAME));
+            results.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
+            results.put(REPOSTS, post.getDegree(Direction.INCOMING)
+                    - 1 // for the Posted Relationship Type
+                    - post.getDegree(RelationshipTypes.LIKES)
+                    - post.getDegree(RelationshipTypes.REPLIED_TO));
+            tx.success();
+        }
+        return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
+    }
+
     @POST
     @Path("/{username2}/{time}/reply")
     public Response createReply(String body, @PathParam("username") final String username,

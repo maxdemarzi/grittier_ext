@@ -34,7 +34,8 @@ A Neo4j Based Twitter Clone Backend
         :DELETE /v1/users/{username}/follows/{username2}
         :GET    /v1/users/{username}/posts
         :POST   /v1/users/{username}/posts {status:''}
-        :POST   /v1/users/{username}/posts/{username2}/{time} 
+        :PUT    /v1/users/{username}/posts/{time} {status:''}
+        :POST   /v1/users/{username}/posts/{username2}/{time}
         :GET    /v1/users/{username}/likes
         :POST   /v1/users/{username}/likes/{username2}/{time}
         :DELETE /v1/users/{username}/likes/{username2}/{time}
