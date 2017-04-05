@@ -54,6 +54,7 @@ public class GetMentionsTest {
                     "email: 'michael@neo4j.com', " +
                     "name: 'Michael Hunger'," +
                     "hash: '0bd90aeb51d5982062f4f303a62df935'," +
+                    "time: 1490054400," +
                     "password: 'tunafish'})" +
             "CREATE (laeg:User {username:'laexample', " +
                     "email: 'luke@neo4j.com', " +

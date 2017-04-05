@@ -22,6 +22,8 @@ public class CreateUserTest {
 
         HTTP.Response response = HTTP.POST(neo4j.httpURI().resolve("/v1/users").toString(), input);
         HashMap actual  = response.content();
+        Assert.assertTrue(actual.containsKey(TIME));
+        actual.remove(TIME);
         Assert.assertEquals(expected, actual);
     }
 

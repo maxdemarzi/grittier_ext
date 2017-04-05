@@ -50,7 +50,7 @@ public class Mentions {
             for (Relationship r1 : user.getRelationships(Direction.OUTGOING, RelationshipTypes.BLOCKS)) {
                 blocked.add(r1.getEndNode());
             }
-
+            LocalDateTime earliest = LocalDateTime.ofEpochSecond((Long)user.getProperty(TIME), 0, ZoneOffset.UTC);
             int count = 0;
             while (count < limit && (dateTime.isAfter(earliest))) {
                 RelationshipType relType = RelationshipType.withName("MENTIONED_ON_" +

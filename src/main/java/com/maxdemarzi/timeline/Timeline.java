@@ -29,8 +29,6 @@ public class Timeline {
             .ofPattern("yyyy_MM_dd")
             .withZone(utc);
 
-    private static final LocalDateTime earliest = LocalDateTime.of(2017,3,20,0,0,0);
-
     @GET
     public Response getTimeline(@PathParam("username") final String username,
                              @QueryParam("limit") @DefaultValue("100") final Integer limit,
@@ -53,6 +51,8 @@ public class Timeline {
             for (Relationship r : user.getRelationships(Direction.OUTGOING, RelationshipTypes.FOLLOWS)) {
                 follows.add(r.getEndNode());
             }
+
+            LocalDateTime earliest = LocalDateTime.ofEpochSecond((Long)user.getProperty(TIME), 0, ZoneOffset.UTC);
 
             while (seen.size() < limit && (dateTime.isAfter(earliest))) {
                 RelationshipType posted = RelationshipType.withName("POSTED_ON_" +

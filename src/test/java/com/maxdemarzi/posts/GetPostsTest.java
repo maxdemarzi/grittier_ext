@@ -49,6 +49,7 @@ public class GetPostsTest {
                     "email: 'max@neo4j.com', " +
                     "hash: 'hash', " +
                     "name: 'Max De Marzi'," +
+                    "time: 1490054400," +
                     "password: 'swordfish'})" +
                     "CREATE (post1:Post {status:'Hello World!', " +
                     "time: 1490140299})" +

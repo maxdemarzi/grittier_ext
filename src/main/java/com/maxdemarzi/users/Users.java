@@ -14,6 +14,7 @@ import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static com.maxdemarzi.Properties.*;
@@ -102,6 +103,10 @@ public class Users {
                     user.setProperty(USERNAME, parameters.get(USERNAME));
                     user.setProperty(PASSWORD, parameters.get(PASSWORD));
                     user.setProperty(HASH, new Md5Hash(((String)parameters.get(EMAIL)).toLowerCase()).toString());
+
+                    LocalDateTime dateTime = LocalDateTime.now(utc);
+                    user.setProperty(TIME, dateTime.truncatedTo(ChronoUnit.DAYS).toEpochSecond(ZoneOffset.UTC));
+
                     results = user.getAllProperties();
                 } else {
                     throw UserExceptions.existingEmailParameter;

@@ -44,11 +44,13 @@ public class CreateMentionsTest {
                     "email: 'maxdemarzi@hotmail.com', " +
                     "name: 'Max De Marzi'," +
                     "hash: '0bd90aeb51d5982062f4f303a62df935'," +
+                    "time: 1490054400," +
                     "password: 'swordfish'})" +
             "CREATE (jexp:User {username:'jexp', " +
                     "email: 'michael@neo4j.com', " +
                     "name: 'Michael Hunger'," +
                     "hash: '0bd90aeb51d5982062f4f303a62df935'," +
+                    "time: 1490054400," +
                     "password: 'tunafish'})";
 
     private static final HashMap input = new HashMap<String, Object>() {{

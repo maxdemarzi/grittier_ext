@@ -47,6 +47,7 @@ public class Posts {
         try (Transaction tx = db.beginTx()) {
             Node user = Users.findUser(username, db);
             Map userProperties = user.getAllProperties();
+            LocalDateTime earliest = LocalDateTime.ofEpochSecond((Long)userProperties.get(TIME), 0, ZoneOffset.UTC);
             int count = 0;
             while (count < limit && (dateTime.isAfter(earliest))) {
                 RelationshipType relType = RelationshipType.withName("POSTED_ON_" +
