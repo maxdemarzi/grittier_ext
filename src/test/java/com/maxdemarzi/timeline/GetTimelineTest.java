@@ -49,15 +49,18 @@ public class GetTimelineTest {
                     "email: 'max@neo4j.com', " +
                     "hash: 'hash', " +
                     "name: 'Max De Marzi'," +
+                    "time: 1490054400," +
                     "password: 'swordfish'})" +
             "CREATE (jexp:User {username:'jexp', " +
                     "email: 'michael@neo4j.com', " +
                     "hash: 'hash', " +
+                    "time: 1490054400," +
                     "name: 'Michael Hunger'," +
                     "password: 'tunafish'})" +
             "CREATE (laeg:User {username:'laexample', " +
                     "email: 'luke@neo4j.com', " +
                     "hash: 'hash', " +
+                    "time: 1490054400," +
                     "name: 'Luke Gannon'," +
                     "password: 'cuddlefish'})" +
 
