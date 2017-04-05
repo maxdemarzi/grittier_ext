@@ -68,6 +68,7 @@ public class CreatePostTest {
             "CREATE (max:User {username:'maxdemarzi', " +
                     "email: 'maxdemarzi@hotmail.com', " +
                     "name: 'Max De Marzi'," +
+                    "hash: '0bd90aeb51d5982062f4f303a62df935'," +
                     "password: 'swordfish'})";
 
     private static final HashMap input = new HashMap<String, Object>() {{

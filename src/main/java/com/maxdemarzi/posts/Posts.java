@@ -94,6 +94,7 @@ public class Posts {
             results = post.getAllProperties();
             results.put(USERNAME, username);
             results.put(NAME, user.getProperty(NAME));
+            results.put(HASH, user.getProperty(HASH));
             results.put(REPOSTS, 0);
             results.put(LIKES, 0);
 
