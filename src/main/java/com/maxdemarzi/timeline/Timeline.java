@@ -86,9 +86,9 @@ public class Timeline {
                             Map<String, Object> properties = r1.getEndNode().getAllProperties();
                             Long reposted_time = (Long)r1.getProperty(TIME);
                             if (reposted_time < latest) {
-                                properties.put(REPOSTEDTIME, reposted_time);
-                                properties.put(REPOSTERUSERNAME, followProperties.get(USERNAME));
-                                properties.put(REPOSTERNAME, followProperties.get(NAME));
+                                properties.put(REPOSTED_TIME, reposted_time);
+                                properties.put(REPOSTER_USERNAME, followProperties.get(USERNAME));
+                                properties.put(REPOSTER_NAME, followProperties.get(NAME));
                                 properties.put(HASH, followProperties.get(HASH));
                                 properties.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
                                 properties.put(REPOSTS, post.getDegree() - 1 - post.getDegree(RelationshipTypes.LIKES));

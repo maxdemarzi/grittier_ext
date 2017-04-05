@@ -192,7 +192,7 @@ public class Posts {
                     dateTime.format(dateFormatter)));
             r1.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
             results = post.getAllProperties();
-            results.put(REPOSTEDTIME, dateTime.toEpochSecond(ZoneOffset.UTC));
+            results.put(REPOSTED_TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
             results.put(TIME, time);
             results.put(USERNAME, user2.getProperty(USERNAME));
             results.put(NAME, user2.getProperty(NAME));

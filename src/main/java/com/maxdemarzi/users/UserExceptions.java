@@ -22,6 +22,7 @@ public class UserExceptions extends Exceptions {
 
     public static final Exceptions userNotFound = new Exceptions(400, "User not Found.");
     public static final Exceptions userBlocked = new Exceptions(400, "Cannot follow blocked User.");
+    public static final Exceptions userSame = new Exceptions(400, "Cannot follow self.");
 
     private UserExceptions(int code, String error) {
         super(code, error);

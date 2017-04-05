@@ -40,11 +40,48 @@ public class Users {
 
     @GET
     @Path("/{username}/profile")
-    public Response getProfile(@PathParam("username") final String username, @Context GraphDatabaseService db) throws IOException {
+    public Response getProfile(@PathParam("username") final String username,
+                               @QueryParam("username2") final String username2,
+                               @Context GraphDatabaseService db) throws IOException {
         Map<String, Object> results;
         try (Transaction tx = db.beginTx()) {
             Node user = findUser(username, db);
             results = getUserAttributes(user);
+
+            if (username2 != null && !username.equals(username2)) {
+                Node user2 = findUser(username2, db);
+                HashSet<Node> followed = new HashSet<>();
+                for (Relationship r1 : user.getRelationships(Direction.OUTGOING, RelationshipTypes.FOLLOWS)) {
+                    followed.add(r1.getEndNode());
+                }
+                HashSet<Node> followed2 = new HashSet<>();
+                for (Relationship r1 : user2.getRelationships(Direction.OUTGOING, RelationshipTypes.FOLLOWS)) {
+                    followed2.add(r1.getEndNode());
+                }
+
+                boolean follows_me = followed.contains(user2);
+                boolean i_follow = followed2.contains(user);
+                results.put(I_FOLLOW, i_follow);
+                results.put(FOLLOWS_ME, follows_me);
+
+                followed.retainAll(followed2);
+
+                results.put(FOLLOWERS_YOU_KNOW_COUNT, followed.size());
+                ArrayList<Map<String, Object>> followers_sample = new ArrayList<>();
+                int count = 0;
+                for (Node follower : followed) {
+                    count++;
+                    Map<String, Object> properties = follower.getAllProperties();
+                    properties.remove(PASSWORD);
+                    properties.remove(EMAIL);
+                    followers_sample.add(properties);
+                    if (count > 10) { break; };
+                }
+
+                results.put(FOLLOWERS_YOU_KNOW, followers_sample);
+
+            }
+
             tx.success();
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
@@ -158,23 +195,26 @@ public class Users {
         try (Transaction tx = db.beginTx()) {
             Node user = findUser(username, db);
             Node user2 = findUser(username2, db);
+            if (user.equals(user2)) {
+                throw UserExceptions.userSame;
+            } else {
+                HashSet<Node> blocked = new HashSet<>();
+                for (Relationship r1 : user2.getRelationships(Direction.OUTGOING, RelationshipTypes.BLOCKS)) {
+                    blocked.add(r1.getEndNode());
+                }
 
-            HashSet<Node> blocked = new HashSet<>();
-            for (Relationship r1 : user2.getRelationships(Direction.OUTGOING, RelationshipTypes.BLOCKS)) {
-                blocked.add(r1.getEndNode());
+                if (blocked.contains(user)) {
+                    throw UserExceptions.userBlocked;
+                }
+
+                Relationship follows = user.createRelationshipTo(user2, RelationshipTypes.FOLLOWS);
+                LocalDateTime dateTime = LocalDateTime.now(utc);
+                follows.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
+                results = user2.getAllProperties();
+                results.remove(EMAIL);
+                results.remove(PASSWORD);
+                tx.success();
             }
-
-            if ( blocked.contains(user)) {
-                throw UserExceptions.userBlocked;
-            }
-
-            Relationship follows =  user.createRelationshipTo(user2, RelationshipTypes.FOLLOWS);
-            LocalDateTime dateTime = LocalDateTime.now(utc);
-            follows.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
-            results = user2.getAllProperties();
-            results.remove(EMAIL);
-            results.remove(PASSWORD);
-            tx.success();
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }

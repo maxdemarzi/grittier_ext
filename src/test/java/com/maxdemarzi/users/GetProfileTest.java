@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.neo4j.harness.junit.Neo4jRule;
 import org.neo4j.test.server.HTTP;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 public class GetProfileTest {
@@ -22,6 +23,15 @@ public class GetProfileTest {
         HTTP.Response response = HTTP.GET(neo4j.httpURI().resolve("/v1/users/maxdemarzi/profile").toString());
         HashMap actual  = response.content();
         Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void shouldGetProfileSecondUser() {
+        HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
+
+        HTTP.Response response = HTTP.GET(neo4j.httpURI().resolve("/v1/users/maxdemarzi/profile?username2=jexp").toString());
+        HashMap actual  = response.content();
+        Assert.assertEquals(expected2, actual);
     }
 
     private static final String FIXTURE =
@@ -50,7 +60,8 @@ public class GetProfileTest {
             "CREATE (max)-[:FOLLOWS]->(stefan)" +
             "CREATE (max)-[:FOLLOWS]->(mark)" +
             "CREATE (max)<-[:FOLLOWS]-(laeg)" +
-
+            "CREATE (jexp)-[:FOLLOWS]->(stefan)" +
+            "CREATE (jexp)-[:FOLLOWS]->(mark)" +
             "CREATE (post1:Post {status:'Hello World!', " +
                     "time: 1490140299})" +
             "CREATE (post2:Post {status:'How are you!', " +
@@ -70,6 +81,30 @@ public class GetProfileTest {
         put("likes", 1);
         put("followers", 1);
         put("following", 3);
+        put("hash", "0bd90aeb51d5982062f4f303a62df935");
+    }};
+
+    private static final HashMap expected2 = new HashMap<String, Object>() {{
+        put("username", "maxdemarzi");
+        put("name", "Max De Marzi");
+        put("posts", 2);
+        put("likes", 1);
+        put("followers", 1);
+        put("following", 3);
+        put("i_follow", false);
+        put("follows_me", true);
+        put("followers_you_know_count", 2);
+        put("followers_you_know", new ArrayList<HashMap<String, Object>>(){{
+            add(new HashMap<String, Object> () {{
+                put("name", "Stefan Armbruster");
+                put("username", "darthvader42");
+            }});
+            add(new HashMap<String, Object> () {{
+                put("name", "Mark Needham");
+                put("username", "markhneedham");
+            }});
+
+        }});
         put("hash", "0bd90aeb51d5982062f4f303a62df935");
     }};
 }

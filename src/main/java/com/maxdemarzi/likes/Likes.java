@@ -49,7 +49,7 @@ public class Likes {
                 Long time = (Long)r1.getProperty("time");
                 if(time < latest) {
                     Node author = getAuthor(post, (Long)properties.get(TIME));
-                    properties.put(LIKEDTIME, time);
+                    properties.put(LIKED_TIME, time);
                     properties.put(USERNAME, author.getProperty(USERNAME));
                     properties.put(NAME, author.getProperty(NAME));
                     properties.put(HASH, author.getProperty(HASH));
@@ -62,7 +62,7 @@ public class Likes {
             tx.success();
         }
 
-        results.sort(Comparator.comparing(m -> (Long) m.get(LIKEDTIME), reverseOrder()));
+        results.sort(Comparator.comparing(m -> (Long) m.get(LIKED_TIME), reverseOrder()));
 
         return Response.ok().entity(objectMapper.writeValueAsString(
                 results.subList(0, Math.min(results.size(), limit))))
