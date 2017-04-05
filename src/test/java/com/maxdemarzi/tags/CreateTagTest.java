@@ -36,7 +36,7 @@ public class CreateTagTest {
 
         Assert.assertEquals("maxdemarzi", actual2.get(0).get(USERNAME));
         Assert.assertEquals("Max De Marzi", actual2.get(0).get(NAME));
-        Assert.assertEquals("Hello World! #neo4j", actual2.get(0).get(STATUS));
+        Assert.assertEquals(expected.get(STATUS), actual2.get(0).get(STATUS));
     }
 
     private static final String FIXTURE =
@@ -47,11 +47,11 @@ public class CreateTagTest {
                     "password: 'swordfish'})";
 
     private static final HashMap input = new HashMap<String, Object>() {{
-        put(STATUS, "Hello World! #neo4j");
+        put(STATUS, "Hello World! #neo4j #neo4j");
     }};
 
     private static final HashMap expected = new HashMap<String, Object>() {{
-        put(STATUS, "Hello World! #neo4j");
+        put(STATUS, "Hello World! #neo4j #neo4j");
     }};
 
     private static final ArrayList<HashMap<String, Object>> expected2 = new ArrayList<HashMap<String, Object>>() {
@@ -60,7 +60,7 @@ public class CreateTagTest {
                 put("username", "maxdemarzi");
                 put("name", "Max De Marzi");
                 put("hash", "0bd90aeb51d5982062f4f303a62df935");
-                put("status", "Hello World! #neo4j");
+                put("status", "Hello World! #neo4j #neo4j");
                 put("likes", 0);
                 put("reposts", 0);
             }});

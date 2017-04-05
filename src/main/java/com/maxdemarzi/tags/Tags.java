@@ -13,10 +13,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -92,6 +89,11 @@ public class Tags {
 
     public static void createTags(Node post, HashMap<String, Object>  input, LocalDateTime dateTime, GraphDatabaseService db) {
         Matcher mat = hashtagPattern.matcher(((String)input.get("status")).toLowerCase());
+        for (Relationship r1 : post.getRelationships(Direction.OUTGOING, RelationshipType.withName("TAGGED_ON_" +
+                dateTime.format(dateFormatter)))) {
+            r1.delete();
+        }
+        Set<Node> tagged = new HashSet<>();
         while (mat.find()) {
             String tag = mat.group(1);
             Node hashtag = db.findNode(Labels.Tag, NAME, tag);
@@ -100,8 +102,11 @@ public class Tags {
                 hashtag.setProperty(NAME, tag);
                 hashtag.setProperty(TIME, dateTime.truncatedTo(ChronoUnit.DAYS).toEpochSecond(ZoneOffset.UTC));
             }
-            post.createRelationshipTo(hashtag, RelationshipType.withName("TAGGED_ON_" +
-                    dateTime.format(dateFormatter)));
+            if (!tagged.contains(hashtag)) {
+                post.createRelationshipTo(hashtag, RelationshipType.withName("TAGGED_ON_" +
+                        dateTime.format(dateFormatter)));
+                tagged.add(hashtag);
+            }
         }
     }
 }

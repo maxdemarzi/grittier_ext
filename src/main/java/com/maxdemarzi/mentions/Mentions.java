@@ -90,13 +90,21 @@ public class Mentions {
 
     public static void createMentions(Node post, HashMap<String, Object> input, LocalDateTime dateTime, GraphDatabaseService db) {
         Matcher mat = mentionsPattern.matcher(((String)input.get("status")).toLowerCase());
+
+        for (Relationship r1 : post.getRelationships(Direction.OUTGOING, RelationshipType.withName("MENTIONED_ON_" +
+                dateTime.format(dateFormatter)))) {
+            r1.delete();
+        }
+
+        Set<Node> mentioned = new HashSet<>();
         while (mat.find()) {
             String username = mat.group(1);
             Node user = db.findNode(Labels.User, USERNAME, username);
-            if (user != null) {
+            if (user != null && !mentioned.contains(user)) {
                 Relationship r1 = post.createRelationshipTo(user, RelationshipType.withName("MENTIONED_ON_" +
                         dateTime.format(dateFormatter)));
                 r1.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
+                mentioned.add(user);
             }
         }
     }

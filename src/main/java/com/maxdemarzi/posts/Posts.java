@@ -130,6 +130,10 @@ public class Posts {
             Node user = Users.findUser(username, db);
             Node post = getPost(user, time);
             post.setProperty(STATUS, input.get(STATUS));
+            LocalDateTime dateTime = LocalDateTime.ofEpochSecond((Long)post.getProperty(TIME), 0, ZoneOffset.UTC);
+            Tags.createTags(post, input, dateTime, db);
+            Mentions.createMentions(post, input, dateTime, db);
+
             results = post.getAllProperties();
             results.put(USERNAME, username);
             results.put(NAME, user.getProperty(NAME));
