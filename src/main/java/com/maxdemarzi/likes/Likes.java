@@ -107,13 +107,22 @@ public class Likes {
             Node user2 = Users.findUser(username2, db);
             Node post = getPost(user2, time);
 
-            for (Relationship r1 : user.getRelationships(Direction.OUTGOING, RelationshipTypes.LIKES)) {
-                if (r1.getEndNode().equals(post)) {
-                    r1.delete();
-                    break;
+            if (user.getDegree(RelationshipTypes.LIKES, Direction.OUTGOING)
+                    < post.getDegree(RelationshipTypes.LIKES, Direction.INCOMING) ) {
+                for (Relationship r1 : user.getRelationships(Direction.OUTGOING, RelationshipTypes.LIKES)) {
+                    if (r1.getEndNode().equals(post)) {
+                        r1.delete();
+                        break;
+                    }
+                }
+            } else {
+                for (Relationship r1 : post.getRelationships(Direction.INCOMING, RelationshipTypes.LIKES)) {
+                    if (r1.getStartNode().equals(user)) {
+                        r1.delete();
+                        break;
+                    }
                 }
             }
-
             tx.success();
         }
         return Response.noContent().build();

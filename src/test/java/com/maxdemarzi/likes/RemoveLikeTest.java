@@ -27,6 +27,13 @@ public class RemoveLikeTest {
     }
 
     @Test
+    public void shouldRemoveLike2() {
+        HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
+        thrown.expect(UniformInterfaceException.class);
+        HTTP.request("DELETE", neo4j.httpURI().resolve("/v1/users/maxdemarzi/likes/laexample/1490208700").toString(), null);
+    }
+
+    @Test
     public void shouldNotRemoveLikeUserNotFound() {
         HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
 
@@ -80,5 +87,6 @@ public class RemoveLikeTest {
                     "CREATE (laeg)-[:POSTED_ON_2017_03_22 {time: 1490208700}]->(post2)" +
                     "CREATE (laeg)-[:REPOSTED_ON_2017_03_22 {time: 1490208800}]->(post1)" +
                     "CREATE (max)-[:LIKES {time: 1490209300 }]->(post1)" +
-                    "CREATE (max)-[:LIKES {time: 1490209400 }]->(post2)" ;
+                    "CREATE (max)-[:LIKES {time: 1490209400 }]->(post2)" +
+                    "CREATE (jexp)-[:LIKES {time: 1490209400 }]->(post2)" ;
 }
