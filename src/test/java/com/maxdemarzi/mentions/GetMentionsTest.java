@@ -25,6 +25,15 @@ public class GetMentionsTest {
     }
 
     @Test
+    public void shouldGetMentionsWithUser() {
+        HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
+
+        HTTP.Response response = HTTP.GET(neo4j.httpURI().resolve("/v1/users/jexp/mentions?username2=maxdemarzi").toString());
+        ArrayList<HashMap> actual  = response.content();
+        Assert.assertEquals(expected2, actual);
+    }
+
+    @Test
     public void shouldGetMentionsLimited() {
         HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
 
@@ -101,6 +110,32 @@ public class GetMentionsTest {
             put("time", 1490140299);
             put("likes", 0);
             put("reposts", 1);
+        }});
+    }};
+
+    private static final ArrayList<HashMap<String, Object>> expected2 = new ArrayList<HashMap<String, Object>>() {{
+        add(new HashMap<String, Object>() {{
+            put("username", "laexample");
+            put("name", "Luke Gannon");
+            put("hash", "0bd90aeb51d5982062f4f303a62df935");
+            put("status", "Hi @jexp");
+            put("time", 1490208700);
+            put("likes", 1);
+            put("reposts", 0);
+            put("liked", true);
+            put("reposted", false);
+        }});
+        add(new HashMap<String, Object>() {{
+            put("username", "maxdemarzi");
+            put("name", "Max De Marzi");
+            put("hash", "0bd90aeb51d5982062f4f303a62df935");
+            put("status", "Hello @jexp");
+            put("time", 1490140299);
+            put("likes", 0);
+            put("reposts", 1);
+            put("liked", false);
+            put("reposted", false);
+
         }});
     }};
 }

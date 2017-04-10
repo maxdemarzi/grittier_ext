@@ -13,11 +13,13 @@ public final class Properties {
     public static final String I_FOLLOW = "i_follow";
     public static final String FOLLOWS_ME = "follows_me";
     public static final String LIKES = "likes";
+    public static final String LIKED = "liked";
     public static final String LIKED_TIME = "liked_time";
     public static final String NAME = "name";
     public static final String PASSWORD = "password";
     public static final String USERNAME = "username";
     public static final String REPOSTS = "reposts";
+    public static final String REPOSTED = "reposted";
     public static final String REPOSTED_TIME = "reposted_time";
     public static final String REPOSTER_NAME = "reposter_name";
     public static final String REPOSTER_USERNAME = "reposter_username";

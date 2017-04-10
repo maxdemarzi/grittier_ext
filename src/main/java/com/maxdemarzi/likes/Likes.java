@@ -19,6 +19,7 @@ import java.util.Map;
 import static com.maxdemarzi.Properties.*;
 import static com.maxdemarzi.Time.utc;
 import static com.maxdemarzi.posts.Posts.getAuthor;
+import static com.maxdemarzi.posts.Posts.userRepostedPost;
 import static com.maxdemarzi.users.Users.getPost;
 import static java.util.Collections.reverseOrder;
 
@@ -31,6 +32,7 @@ public class Likes {
     public Response getLikes(@PathParam("username") final String username,
                              @QueryParam("limit") @DefaultValue("25") final Integer limit,
                              @QueryParam("since") final Long since,
+                             @QueryParam("username2") final String username2,
                              @Context GraphDatabaseService db) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
         LocalDateTime dateTime;
@@ -43,6 +45,10 @@ public class Likes {
 
         try (Transaction tx = db.beginTx()) {
             Node user = Users.findUser(username, db);
+            Node user2 = null;
+            if (username2 != null) {
+                user2 = Users.findUser(username2, db);
+            }
             for (Relationship r1 : user.getRelationships(Direction.OUTGOING, RelationshipTypes.LIKES)) {
                 Node post = r1.getEndNode();
                 Map<String, Object> properties = post.getAllProperties();
@@ -55,7 +61,10 @@ public class Likes {
                     properties.put(HASH, author.getProperty(HASH));
                     properties.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
                     properties.put(REPOSTS, post.getDegree() - 1 - post.getDegree(RelationshipTypes.LIKES));
-
+                    if (user2 != null) {
+                        properties.put(LIKED, userLikesPost(user2, post));
+                        properties.put(REPOSTED, userRepostedPost(user2, post));
+                    }
                     results.add(properties);
                 }
             }
@@ -81,6 +90,11 @@ public class Likes {
             Node user = Users.findUser(username, db);
             Node user2 = Users.findUser(username2, db);
             Node post = getPost(user2, time);
+
+            if (userLikesPost(user, post)) {
+                throw LikeExceptions.alreadyLikesPost;
+            }
+
             Relationship like = user.createRelationshipTo(post, RelationshipTypes.LIKES);
             LocalDateTime dateTime = LocalDateTime.now(utc);
             like.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
@@ -101,7 +115,7 @@ public class Likes {
                                @PathParam("username2") final String username2,
                                @PathParam("time") final Long time,
                                @Context GraphDatabaseService db) throws IOException {
-
+        boolean liked = false;
         try (Transaction tx = db.beginTx()) {
             Node user = Users.findUser(username, db);
             Node user2 = Users.findUser(username2, db);
@@ -112,6 +126,7 @@ public class Likes {
                 for (Relationship r1 : user.getRelationships(Direction.OUTGOING, RelationshipTypes.LIKES)) {
                     if (r1.getEndNode().equals(post)) {
                         r1.delete();
+                        liked = true;
                         break;
                     }
                 }
@@ -119,12 +134,39 @@ public class Likes {
                 for (Relationship r1 : post.getRelationships(Direction.INCOMING, RelationshipTypes.LIKES)) {
                     if (r1.getStartNode().equals(user)) {
                         r1.delete();
+                        liked = true;
                         break;
                     }
                 }
             }
             tx.success();
         }
+
+        if(!liked) {
+            throw LikeExceptions.notLikingPost;
+        }
+
         return Response.noContent().build();
+    }
+
+    public static boolean userLikesPost(Node user, Node post) {
+        boolean alreadyLiked = false;
+        if (user.getDegree(RelationshipTypes.LIKES, Direction.OUTGOING)
+                < post.getDegree(RelationshipTypes.LIKES, Direction.INCOMING) ) {
+            for (Relationship r1 : user.getRelationships(Direction.OUTGOING, RelationshipTypes.LIKES)) {
+                if (r1.getEndNode().equals(post)) {
+                    alreadyLiked = true;
+                    break;
+                }
+            }
+        } else {
+            for (Relationship r1 : post.getRelationships(Direction.INCOMING, RelationshipTypes.LIKES)) {
+                if (r1.getStartNode().equals(user)) {
+                    alreadyLiked = true;
+                    break;
+                }
+            }
+        }
+        return alreadyLiked;
     }
 }

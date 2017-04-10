@@ -19,7 +19,9 @@ import java.util.regex.Pattern;
 
 import static com.maxdemarzi.Properties.*;
 import static com.maxdemarzi.Time.*;
+import static com.maxdemarzi.likes.Likes.userLikesPost;
 import static com.maxdemarzi.posts.Posts.getAuthor;
+import static com.maxdemarzi.posts.Posts.userRepostedPost;
 import static java.util.Collections.reverseOrder;
 
 @Path("/users/{username}/mentions")
@@ -31,9 +33,10 @@ public class Mentions {
 
     @GET
     public Response getMentions(@PathParam("username") final String username,
-                             @QueryParam("limit") @DefaultValue("25") final Integer limit,
-                             @QueryParam("since") final Long since,
-                             @Context GraphDatabaseService db) throws IOException {
+                                @QueryParam("limit") @DefaultValue("25") final Integer limit,
+                                @QueryParam("since") final Long since,
+                                @QueryParam("username2") final String username2,
+                                @Context GraphDatabaseService db) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
         LocalDateTime dateTime;
         if (since == null) {
@@ -45,6 +48,10 @@ public class Mentions {
 
         try (Transaction tx = db.beginTx()) {
             Node user = Users.findUser(username, db);
+            Node user2 = null;
+            if (username2 != null) {
+                user2 = Users.findUser(username2, db);
+            }
 
             HashSet<Node> blocked = new HashSet<>();
             for (Relationship r1 : user.getRelationships(Direction.OUTGOING, RelationshipTypes.BLOCKS)) {
@@ -72,6 +79,10 @@ public class Mentions {
                                     - 1 // for the Posted Relationship Type
                                     - post.getDegree(RelationshipTypes.LIKES)
                                     - post.getDegree(RelationshipTypes.REPLIED_TO));
+                            if (user2 != null) {
+                                result.put(LIKED, userLikesPost(user2, post));
+                                result.put(REPOSTED, userRepostedPost(user2, post));
+                            }
 
                             results.add(result);
                             count++;

@@ -22,6 +22,7 @@ import java.util.Map;
 
 import static com.maxdemarzi.Properties.*;
 import static com.maxdemarzi.Time.*;
+import static com.maxdemarzi.likes.Likes.userLikesPost;
 import static com.maxdemarzi.users.Users.getPost;
 import static java.util.Collections.reverseOrder;
 
@@ -34,6 +35,7 @@ public class Posts {
     public Response getPosts(@PathParam("username") final String username,
                              @QueryParam("limit") @DefaultValue("25") final Integer limit,
                              @QueryParam("since") final Long since,
+                             @QueryParam("username2") final String username2,
                              @Context GraphDatabaseService db) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
         LocalDateTime dateTime;
@@ -46,6 +48,11 @@ public class Posts {
 
         try (Transaction tx = db.beginTx()) {
             Node user = Users.findUser(username, db);
+            Node user2 = null;
+            if (username2 != null) {
+                user2 = Users.findUser(username2, db);
+            }
+
             Map userProperties = user.getAllProperties();
             LocalDateTime earliest = LocalDateTime.ofEpochSecond((Long)userProperties.get(TIME), 0, ZoneOffset.UTC);
             int count = 0;
@@ -67,7 +74,10 @@ public class Posts {
                                 - 1 // for the Posted Relationship Type
                                 - post.getDegree(RelationshipTypes.LIKES)
                                 - post.getDegree(RelationshipTypes.REPLIED_TO));
-
+                        if (user2 != null) {
+                            result.put(LIKED, userLikesPost(user2, post));
+                            result.put(REPOSTED, userRepostedPost(user2, post));
+                        }
                         results.add(result);
                         count++;
                     }
@@ -217,5 +227,30 @@ public class Posts {
         RelationshipType original = RelationshipType.withName("POSTED_ON_" +
                 postedDateTime.format(dateFormatter));
         return post.getSingleRelationship(original, Direction.INCOMING).getStartNode();
+    }
+
+    public static boolean userRepostedPost(Node user, Node post) {
+        boolean alreadyReposted = false;
+        LocalDateTime dateTime = LocalDateTime.ofEpochSecond((Long)post.getProperty(TIME), 0, ZoneOffset.UTC);
+        RelationshipType repostedOn = RelationshipType.withName("REPOSTED_ON_" +
+                dateTime.format(dateFormatter));
+
+        if (user.getDegree(repostedOn, Direction.OUTGOING)
+                < post.getDegree(repostedOn, Direction.INCOMING) ) {
+            for (Relationship r1 : user.getRelationships(Direction.OUTGOING, repostedOn)) {
+                if (r1.getEndNode().equals(post)) {
+                    alreadyReposted = true;
+                    break;
+                }
+            }
+        } else {
+            for (Relationship r1 : post.getRelationships(Direction.INCOMING, repostedOn)) {
+                if (r1.getStartNode().equals(user)) {
+                    alreadyReposted = true;
+                    break;
+                }
+            }
+        }
+        return alreadyReposted;
     }
 }

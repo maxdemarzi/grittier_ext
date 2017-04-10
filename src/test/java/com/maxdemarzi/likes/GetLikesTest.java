@@ -25,6 +25,15 @@ public class GetLikesTest {
     }
 
     @Test
+    public void shouldGetLikesWithUser() {
+        HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
+
+        HTTP.Response response = HTTP.GET(neo4j.httpURI().resolve("/v1/users/jexp/likes?username2=maxdemarzi").toString());
+        ArrayList<HashMap> actual  = response.content();
+        Assert.assertEquals(expected2, actual);
+    }
+
+    @Test
     public void shouldGetLikesLimited() {
         HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
 
@@ -68,7 +77,8 @@ public class GetLikesTest {
             "CREATE (laeg)-[:POSTED_ON_2017_03_22 {time: 1490208700}]->(post2)" +
             "CREATE (laeg)-[:REPOSTED_ON_2017_03_22 {time: 1490208800}]->(post1)" +
             "CREATE (max)-[:LIKES {time: 1490209300 }]->(post1)" +
-            "CREATE (max)-[:LIKES {time: 1490209400 }]->(post2)" ;
+            "CREATE (max)-[:LIKES {time: 1490209400 }]->(post2)" +
+            "CREATE (jexp)-[:LIKES {time: 1490208900 }]->(post2)" ;
 
     private static final ArrayList<HashMap<String, Object>> expected = new ArrayList<HashMap<String, Object>>() {{
         add(new HashMap<String, Object>() {{
@@ -78,7 +88,7 @@ public class GetLikesTest {
             put("status", "How are you!");
             put("time", 1490208700);
             put("liked_time", 1490209400);
-            put("likes", 1);
+            put("likes", 2);
             put("reposts", 0);
         }});
         add(new HashMap<String, Object>() {{
@@ -90,6 +100,21 @@ public class GetLikesTest {
             put("liked_time", 1490209300);
             put("likes", 1);
             put("reposts", 1);
+        }});
+    }};
+
+    private static final ArrayList<HashMap<String, Object>> expected2 = new ArrayList<HashMap<String, Object>>() {{
+        add(new HashMap<String, Object>() {{
+            put("username", "laexample");
+            put("name", "Luke Gannon");
+            put("hash", "0bd90aeb51d5982062f4f303a62df935");
+            put("status", "How are you!");
+            put("time", 1490208700);
+            put("liked_time", 1490208900);
+            put("likes", 2);
+            put("reposts", 0);
+            put("liked", true);
+            put("reposted", false);
         }});
     }};
 }

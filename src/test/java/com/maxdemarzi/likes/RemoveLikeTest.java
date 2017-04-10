@@ -63,6 +63,16 @@ public class RemoveLikeTest {
         Assert.assertEquals("Post not Found.", actual.get("error"));
     }
 
+    @Test
+    public void shouldNotRemoveLikeNotFound() {
+        HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
+
+        HTTP.Response response = HTTP.request("DELETE", neo4j.httpURI().resolve("/v1/users/markhneedham/likes/jexp/1490140299").toString(), null);
+        HashMap actual  = response.content();
+        Assert.assertEquals(400, response.status());
+        Assert.assertEquals("Not liking Post.", actual.get("error"));
+    }
+
     private static final String FIXTURE =
             "CREATE (max:User {username:'maxdemarzi', " +
                     "email: 'max@neo4j.com', " +
@@ -79,6 +89,11 @@ public class RemoveLikeTest {
                     "name: 'Luke Gannon'," +
                     "hash: '0bd90aeb51d5982062f4f303a62df935'," +
                     "password: 'cuddlefish'})" +
+                    "CREATE (mark:User {username:'markhneedham', " +
+                    "email: 'mark@neo4j.com', " +
+                    "name: 'Mark Needham'," +
+                    "hash: '0bd90aeb51d5982062f4f303a62df935'," +
+                    "password: 'jellyfish'})" +
                     "CREATE (post1:Post {status:'Hello World!', " +
                     "time: 1490140299})" +
                     "CREATE (post2:Post {status:'How are you!', " +
