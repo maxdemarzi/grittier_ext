@@ -8,6 +8,8 @@ import org.neo4j.test.server.HTTP;
 
 import java.util.HashMap;
 
+import static com.maxdemarzi.Properties.STATUS;
+
 public class CreateRepostTest {
     @Rule
     public Neo4jRule neo4j = new Neo4jRule()
@@ -22,6 +24,17 @@ public class CreateRepostTest {
         HashMap actual  = response.content();
         expected.put("reposted_time", actual.get("reposted_time"));
         Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void shouldNotCreateRepostTwice() throws InterruptedException {
+        HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
+        HTTP.POST(neo4j.httpURI().resolve("/v1/users/maxdemarzi/posts/jexp/1490140299").toString());
+        HTTP.Response response = HTTP.POST(neo4j.httpURI().resolve("/v1/users/maxdemarzi/posts/jexp/1490140299").toString());
+        HashMap actual  = response.content();
+        Assert.assertEquals(400, response.status());
+        Assert.assertEquals("Post already Reposted.", actual.get("error"));
+        Assert.assertFalse(actual.containsKey(STATUS));
     }
 
     private static final String FIXTURE =
