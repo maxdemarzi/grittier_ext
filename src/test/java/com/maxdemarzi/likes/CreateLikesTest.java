@@ -62,5 +62,7 @@ public class CreateLikesTest {
         put("time", 1490140299);
         put("likes", 1);
         put("reposts", 0);
+        put("liked", true);
+        put("reposted", false);
     }};
 }

@@ -102,8 +102,12 @@ public class Likes {
             results.put(USERNAME, user2.getProperty(USERNAME));
             results.put(NAME, user2.getProperty(NAME));
             results.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
-            results.put(REPOSTS, post.getDegree() - 1 - post.getDegree(RelationshipTypes.LIKES));
-
+            results.put(REPOSTS, post.getDegree(Direction.INCOMING)
+                    - 1 // for the Posted Relationship Type
+                    - post.getDegree(RelationshipTypes.LIKES)
+                    - post.getDegree(RelationshipTypes.REPLIED_TO));
+            results.put(LIKED, true);
+            results.put(REPOSTED, userRepostedPost(user, post));
             tx.success();
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();

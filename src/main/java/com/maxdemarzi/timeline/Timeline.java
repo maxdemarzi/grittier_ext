@@ -17,7 +17,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static com.maxdemarzi.Properties.*;
+import static com.maxdemarzi.likes.Likes.userLikesPost;
 import static com.maxdemarzi.posts.Posts.getAuthor;
+import static com.maxdemarzi.posts.Posts.userRepostedPost;
 import static java.util.Collections.reverseOrder;
 
 @Path("/users/{username}/timeline")
@@ -74,7 +76,12 @@ public class Timeline {
                                 properties.put(NAME, followProperties.get(NAME));
                                 properties.put(HASH, followProperties.get(HASH));
                                 properties.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
-                                properties.put(REPOSTS, post.getDegree() - 1 - post.getDegree(RelationshipTypes.LIKES));
+                                properties.put(REPOSTS, post.getDegree(Direction.INCOMING)
+                                        - 1 // for the Posted Relationship Type
+                                        - post.getDegree(RelationshipTypes.LIKES)
+                                        - post.getDegree(RelationshipTypes.REPLIED_TO));
+                                properties.put(LIKED, userLikesPost(user, post));
+                                properties.put(REPOSTED, userRepostedPost(user, post));
                                 results.add(properties);
                             }
                         }
@@ -91,10 +98,14 @@ public class Timeline {
                                 properties.put(REPOSTER_NAME, followProperties.get(NAME));
                                 properties.put(HASH, followProperties.get(HASH));
                                 properties.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
-                                properties.put(REPOSTS, post.getDegree() - 1 - post.getDegree(RelationshipTypes.LIKES));
+                                properties.put(REPOSTS, post.getDegree(Direction.INCOMING)
+                                        - 1 // for the Posted Relationship Type
+                                        - post.getDegree(RelationshipTypes.LIKES)
+                                        - post.getDegree(RelationshipTypes.REPLIED_TO));
+                                properties.put(LIKED, userLikesPost(user, post));
+                                properties.put(REPOSTED, userRepostedPost(user, post));
 
                                 Node author = getAuthor(post, (Long)properties.get(TIME));
-
                                 properties.put(USERNAME, author.getProperty(USERNAME));
                                 properties.put(NAME, author.getProperty(NAME));
                                 results.add(properties);

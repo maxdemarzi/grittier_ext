@@ -77,7 +77,8 @@ public class GetTimelineTest {
             "CREATE (laeg)-[:POSTED_ON_2017_03_22 {time: 1490208700}]->(post2)" +
             "CREATE (max)-[:POSTED_ON_2017_03_22 {time: 1490208800}]->(post3)" +
             "CREATE (laeg)-[:LIKES {time:1490143299}]->(post1)" +
-            "CREATE (laeg)-[:REPOSTED_ON_2017_03_22 {time:1490208000}]->(post1)";
+            "CREATE (laeg)-[:REPOSTED_ON_2017_03_22 {time:1490208000}]->(post1)" +
+            "CREATE (max)-[:LIKES {time: 1490214800}]->(post2)" ;
 
     private static final ArrayList<HashMap<String, Object>> expected = new ArrayList<HashMap<String, Object>>() {{
         add(new HashMap<String, Object>() {{
@@ -88,6 +89,9 @@ public class GetTimelineTest {
             put("time", 1490208800);
             put("likes", 0);
             put("reposts", 0);
+            put("liked", false);
+            put("reposted", false);
+
         }});
         add(new HashMap<String, Object>() {{
             put("username", "laexample");
@@ -95,8 +99,10 @@ public class GetTimelineTest {
             put("hash", "hash");
             put("status", "How are you!");
             put("time", 1490208700);
-            put("likes", 0);
+            put("likes", 1);
             put("reposts", 0);
+            put("liked", true);
+            put("reposted", false);
         }});
         add(new HashMap<String, Object>() {{
             put("reposter_username", "laexample");
@@ -109,6 +115,9 @@ public class GetTimelineTest {
             put("time", 1490140299);
             put("likes", 1);
             put("reposts", 1);
+            put("liked", false);
+            put("reposted", false);
+
         }});
     }};
 
@@ -120,6 +129,8 @@ public class GetTimelineTest {
             put("time", 1490140299);
             put("likes", 1);
             put("reposts", 1);
-        }};
+            put("liked", false);
+            put("reposted", false);
+    }};
 
 }

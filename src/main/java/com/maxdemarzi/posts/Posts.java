@@ -219,6 +219,9 @@ public class Posts {
                         - 1 // for the Posted Relationship Type
                         - post.getDegree(RelationshipTypes.LIKES)
                         - post.getDegree(RelationshipTypes.REPLIED_TO));
+                results.put(LIKED, userLikesPost(user, post));
+                results.put(REPOSTED, true);
+
             }
             tx.success();
         }
@@ -234,6 +237,16 @@ public class Posts {
 
     public static boolean userRepostedPost(Node user, Node post) {
         boolean alreadyReposted = false;
+
+        if (post.getDegree(Direction.INCOMING) < 1000) {
+            for (Relationship r1 : post.getRelationships(Direction.INCOMING)) {
+                if (r1.getStartNode().equals(user) && r1.getType().name().startsWith("REPOSTED_ON_")) {
+                    alreadyReposted = true;
+                    break;
+                }
+            }
+        }
+
         LocalDateTime now = LocalDateTime.now(utc);
         LocalDateTime dateTime = LocalDateTime.ofEpochSecond((Long)post.getProperty(TIME), 0, ZoneOffset.UTC).truncatedTo(ChronoUnit.DAYS);
 
