@@ -1,5 +1,7 @@
 package com.maxdemarzi.tags;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.maxdemarzi.Labels;
 import com.maxdemarzi.RelationshipTypes;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -14,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -29,6 +32,41 @@ public class Tags {
     private static final Pattern hashtagPattern = Pattern.compile("#(\\S+)");
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static GraphDatabaseService db;
+
+    public Tags(@Context GraphDatabaseService graphDatabaseService) {
+        db = graphDatabaseService;
+    }
+
+    // Cache
+    private static LoadingCache<String, List<Map<String, Object>>> trends = Caffeine.newBuilder()
+            .expireAfterWrite(1, TimeUnit.DAYS)
+            .refreshAfterWrite(5, TimeUnit.MINUTES)
+            .build(Tags::getTrends);
+
+    private static List<Map<String, Object>> getTrends(String key) {
+        ArrayList<Map<String, Object>> results = new ArrayList<>();
+        LocalDateTime dateTime = LocalDateTime.now(utc);
+        RelationshipType tagged = RelationshipType.withName("TAGGED_ON_" +
+                dateTime.format(dateFormatter));
+        try (Transaction tx = db.beginTx()) {
+            ResourceIterator<Node> tags = db.findNodes(Labels.Tag);
+            while (tags.hasNext()) {
+                Node tag = tags.next();
+                int taggings = tag.getDegree(tagged, Direction.INCOMING);
+                if ( taggings > 0) {
+                    HashMap<String, Object> result = new HashMap<>();
+                    result.put(NAME, tag.getProperty(NAME));
+                    result.put(COUNT, taggings);
+                    results.add(result);
+                }
+            }
+            tx.success();
+        }
+
+        results.sort(Comparator.comparing(m -> (Integer) m.get(COUNT), reverseOrder()));
+        return results.subList(0, Math.min(results.size(), 10));
+    }
 
     @GET
     @Path("/{hashtag}")
@@ -112,31 +150,12 @@ public class Tags {
 
     @GET
     public Response getTrends(@Context GraphDatabaseService db) throws IOException {
-        ArrayList<Map<String, Object>> results = new ArrayList<>();
-        LocalDateTime dateTime = LocalDateTime.now(utc);
-        RelationshipType tagged = RelationshipType.withName("TAGGED_ON_" +
-                dateTime.format(dateFormatter));
+        List<Map<String, Object>> results;
         try (Transaction tx = db.beginTx()) {
-            ResourceIterator<Node> tags = db.findNodes(Labels.Tag);
-            while (tags.hasNext()) {
-                Node tag = tags.next();
-                int taggings = tag.getDegree(tagged, Direction.INCOMING);
-                if ( taggings > 0) {
-                    HashMap<String, Object> result = new HashMap();
-                    result.put(NAME, tag.getProperty(NAME));
-                    result.put(COUNT, taggings);
-                    results.add(result);
-                }
-
-            }
-            tx.success();
+            results = trends.get("trends");
         }
 
-        results.sort(Comparator.comparing(m -> (Integer) m.get(COUNT), reverseOrder()));
-
-        return Response.ok().entity(objectMapper.writeValueAsString(
-                results.subList(0, Math.min(results.size(), 10))))
-                .build();
+        return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
 
     }
 }

@@ -255,6 +255,7 @@ public class Users {
     }
 
     public static Node findUser(String username, @Context GraphDatabaseService db) {
+        if (username == null) { return null; }
         Node user = db.findNode(Labels.User, USERNAME, username);
         if (user == null) { throw UserExceptions.userNotFound; }
         return user;
