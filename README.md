@@ -46,8 +46,9 @@ A Neo4j Based Twitter Clone Backend
         :GET    /v1/users/{username}/timeline
         :GET    /v1/users/{username}/recommendations/friends
         :GET    /v1/users/{username}/recommendations/follows
+        :GET    /v1/tags
         :GET    /v1/tags/{tag}
-        
+        :GET    /v1/search&q=term
         
 7. Query Parameters:
         

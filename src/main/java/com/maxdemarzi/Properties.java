@@ -6,6 +6,7 @@ public final class Properties {
         throw new IllegalAccessError("Utility class");
     }
 
+    public static final String COUNT = "count";
     public static final String EMAIL = "email";
     public static final String FOLLOWERS_YOU_KNOW = "followers_you_know";
     public static final String FOLLOWERS_YOU_KNOW_COUNT = "followers_you_know_count";

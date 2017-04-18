@@ -63,10 +63,8 @@ public class GetTimelineTest {
                     "time: 1490054400," +
                     "name: 'Luke Gannon'," +
                     "password: 'cuddlefish'})" +
-
             "CREATE (max)-[:FOLLOWS]->(jexp)" +
             "CREATE (max)-[:FOLLOWS]->(laeg)" +
-
             "CREATE (post1:Post {status:'Hello World!', " +
                     "time: 1490140299})" +
             "CREATE (post2:Post {status:'How are you!', " +

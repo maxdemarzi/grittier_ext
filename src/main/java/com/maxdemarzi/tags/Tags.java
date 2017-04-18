@@ -109,4 +109,34 @@ public class Tags {
             }
         }
     }
+
+    @GET
+    public Response getTrends(@Context GraphDatabaseService db) throws IOException {
+        ArrayList<Map<String, Object>> results = new ArrayList<>();
+        LocalDateTime dateTime = LocalDateTime.now(utc);
+        RelationshipType tagged = RelationshipType.withName("TAGGED_ON_" +
+                dateTime.format(dateFormatter));
+        try (Transaction tx = db.beginTx()) {
+            ResourceIterator<Node> tags = db.findNodes(Labels.Tag);
+            while (tags.hasNext()) {
+                Node tag = tags.next();
+                int taggings = tag.getDegree(tagged, Direction.INCOMING);
+                if ( taggings > 0) {
+                    HashMap<String, Object> result = new HashMap();
+                    result.put(NAME, tag.getProperty(NAME));
+                    result.put(COUNT, taggings);
+                    results.add(result);
+                }
+
+            }
+            tx.success();
+        }
+
+        results.sort(Comparator.comparing(m -> (Integer) m.get(COUNT), reverseOrder()));
+
+        return Response.ok().entity(objectMapper.writeValueAsString(
+                results.subList(0, Math.min(results.size(), 10))))
+                .build();
+
+    }
 }
