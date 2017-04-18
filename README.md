@@ -49,6 +49,7 @@ A Neo4j Based Twitter Clone Backend
         :GET    /v1/tags
         :GET    /v1/tags/{tag}
         :GET    /v1/search&q=term
+        :GET    /v1/search/latest
         
 7. Query Parameters:
         

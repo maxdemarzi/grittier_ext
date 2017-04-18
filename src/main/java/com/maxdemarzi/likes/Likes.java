@@ -17,6 +17,7 @@ import java.util.Comparator;
 import java.util.Map;
 
 import static com.maxdemarzi.Properties.*;
+import static com.maxdemarzi.Time.getLatestTime;
 import static com.maxdemarzi.Time.utc;
 import static com.maxdemarzi.posts.Posts.getAuthor;
 import static com.maxdemarzi.posts.Posts.userRepostedPost;
@@ -35,13 +36,7 @@ public class Likes {
                              @QueryParam("username2") final String username2,
                              @Context GraphDatabaseService db) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
-        LocalDateTime dateTime;
-        if (since == null) {
-            dateTime = LocalDateTime.now(utc);
-        } else {
-            dateTime = LocalDateTime.ofEpochSecond(since, 0, ZoneOffset.UTC);
-        }
-        Long latest = dateTime.toEpochSecond(ZoneOffset.UTC);
+        Long latest = getLatestTime(since);
 
         try (Transaction tx = db.beginTx()) {
             Node user = Users.findUser(username, db);

@@ -18,6 +18,7 @@ import java.util.Map;
 import static com.maxdemarzi.Properties.EMAIL;
 import static com.maxdemarzi.Properties.PASSWORD;
 import static com.maxdemarzi.Properties.TIME;
+import static com.maxdemarzi.Time.getLatestTime;
 import static com.maxdemarzi.Time.utc;
 import static com.maxdemarzi.users.Users.findUser;
 import static com.maxdemarzi.users.Users.getUserAttributes;
@@ -34,13 +35,7 @@ public class Blocks {
                               @QueryParam("since") final Long since,
                               @Context GraphDatabaseService db) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
-        LocalDateTime dateTime;
-        if (since == null) {
-            dateTime = LocalDateTime.now(utc);
-        } else {
-            dateTime = LocalDateTime.ofEpochSecond(since, 0, ZoneOffset.UTC);
-        }
-        Long latest = dateTime.toEpochSecond(ZoneOffset.UTC);
+        Long latest = getLatestTime(since);
 
         try (Transaction tx = db.beginTx()) {
             Node user = findUser(username, db);

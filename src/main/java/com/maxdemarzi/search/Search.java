@@ -16,6 +16,8 @@ import org.neo4j.kernel.api.exceptions.schema.SchemaRuleNotFoundException;
 import org.neo4j.kernel.api.index.IndexDescriptor;
 import org.neo4j.kernel.impl.api.KernelStatement;
 import org.neo4j.kernel.impl.core.ThreadToStatementContextBridge;
+import org.neo4j.kernel.impl.storageengine.impl.recordstorage.RecordStorageEngine;
+import org.neo4j.kernel.impl.store.StoreAccess;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.storageengine.api.schema.IndexReader;
 
@@ -26,13 +28,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.maxdemarzi.Properties.*;
-import static com.maxdemarzi.Time.utc;
+import static com.maxdemarzi.Time.getLatestTime;
 import static com.maxdemarzi.likes.Likes.userLikesPost;
 import static com.maxdemarzi.posts.Posts.getAuthor;
 import static com.maxdemarzi.posts.Posts.userRepostedPost;
@@ -87,13 +87,7 @@ public class Search {
                               @QueryParam("username") final String username,
                               @Context GraphDatabaseService db) throws SchemaRuleNotFoundException, IndexNotFoundKernelException, NoSuchMethodException, IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
-        LocalDateTime dateTime;
-        if (since == null) {
-            dateTime = LocalDateTime.now(utc);
-        } else {
-            dateTime = LocalDateTime.ofEpochSecond(since, 0, ZoneOffset.UTC);
-        }
-        Long latest = dateTime.toEpochSecond(ZoneOffset.UTC);
+        Long latest = getLatestTime(since);
 
         try (Transaction tx = db.beginTx()) {
             final Node user = Users.findUser(username, db);
@@ -130,5 +124,52 @@ public class Search {
 
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
+
+
+    @GET
+    @Path("/latest")
+    public Response getLatest(@QueryParam("limit") @DefaultValue("25") final Integer limit,
+                              @QueryParam("since") final Long since,
+                              @QueryParam("username") final String username,
+                              @Context GraphDatabaseService db) throws IOException {
+        ArrayList<Map<String, Object>> results = new ArrayList<>();
+        Long latest = getLatestTime(since);
+
+        try (Transaction tx = db.beginTx()) {
+            final Node user = Users.findUser(username, db);
+
+            RecordStorageEngine recordStorageEngine = dbapi.getDependencyResolver()
+                    .resolveDependency(RecordStorageEngine.class);
+            StoreAccess storeAccess = new StoreAccess(recordStorageEngine.testAccessNeoStores());
+            Long highId = storeAccess.getRawNeoStores().getNodeStore().getHighestPossibleIdInUse();
+
+            int counter = 0;
+            while (counter < limit && highId > -1) {
+                Node post = db.getNodeById(highId);
+                highId--;
+                if (post.getLabels().iterator().next().name().equals(Labels.Post.name())) {
+                    Long time = (Long) post.getProperty("time");
+                    if (time < latest) {
+                        counter++;
+                        Map<String, Object> properties = post.getAllProperties();
+                        Node author = getAuthor(post, (Long) properties.get(TIME));
+
+                        properties.put(USERNAME, author.getProperty(USERNAME));
+                        properties.put(NAME, author.getProperty(NAME));
+                        properties.put(HASH, author.getProperty(HASH));
+                        properties.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
+                        properties.put(REPOSTS, post.getDegree() - 1 - post.getDegree(RelationshipTypes.LIKES));
+                        if (user != null) {
+                            properties.put(LIKED, userLikesPost(user, post));
+                            properties.put(REPOSTED, userRepostedPost(user, post));
+                        }
+                        results.add(properties);
+                    }
+                }
+            }
+        }
+        return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
+    }
+
 
 }
