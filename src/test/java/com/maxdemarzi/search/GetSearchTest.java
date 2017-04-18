@@ -110,7 +110,6 @@ public class GetSearchTest {
             put("likes", 0);
             put("liked", false);
             put("reposted", false);
-
         }});
         add(new HashMap<String, Object>() {{
             put("status", "Hello World!");
@@ -122,7 +121,6 @@ public class GetSearchTest {
             put("likes", 1);
             put("liked", true);
             put("reposted", false);
-
         }});
     }};
 }

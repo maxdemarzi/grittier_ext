@@ -4,6 +4,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.maxdemarzi.Labels;
 import com.maxdemarzi.RelationshipTypes;
+import com.maxdemarzi.users.Users;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.neo4j.graphdb.*;
 
@@ -23,7 +24,9 @@ import java.util.regex.Pattern;
 import static com.maxdemarzi.Properties.*;
 import static com.maxdemarzi.Time.dateFormatter;
 import static com.maxdemarzi.Time.utc;
+import static com.maxdemarzi.likes.Likes.userLikesPost;
 import static com.maxdemarzi.posts.Posts.getAuthor;
+import static com.maxdemarzi.posts.Posts.userRepostedPost;
 import static java.util.Collections.reverseOrder;
 
 @Path("/tags")
@@ -73,6 +76,7 @@ public class Tags {
     public Response getTags(@PathParam("hashtag") final String hashtag,
                              @QueryParam("limit") @DefaultValue("25") final Integer limit,
                              @QueryParam("since") final Long since,
+                             @QueryParam("username") final String username,
                              @Context GraphDatabaseService db) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
         LocalDateTime dateTime;
@@ -84,6 +88,11 @@ public class Tags {
         Long latest = dateTime.toEpochSecond(ZoneOffset.UTC);
 
         try (Transaction tx = db.beginTx()) {
+            Node user = null;
+            if (username != null) {
+                user = Users.findUser(username, db);
+            }
+
             Node tag = db.findNode(Labels.Tag, NAME, hashtag.toLowerCase());
             if (tag != null) {
                 LocalDateTime earliestTag = LocalDateTime.ofEpochSecond((Long) tag.getProperty(TIME), 0, ZoneOffset.UTC);
@@ -109,7 +118,10 @@ public class Tags {
                                     - 1 // for the Posted Relationship Type
                                     - post.getDegree(RelationshipTypes.LIKES)
                                     - post.getDegree(RelationshipTypes.REPLIED_TO));
-
+                            if (user != null) {
+                                result.put(LIKED, userLikesPost(user, post));
+                                result.put(REPOSTED, userRepostedPost(user, post));
+                            }
                             results.add(result);
                             count++;
                         }
