@@ -7,6 +7,7 @@ import com.maxdemarzi.RelationshipTypes;
 import com.maxdemarzi.users.Users;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.neo4j.collection.primitive.PrimitiveLongIterator;
+import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Transaction;
@@ -113,7 +114,10 @@ public class Search {
                 properties.put(NAME, author.getProperty(NAME));
                 properties.put(HASH, author.getProperty(HASH));
                 properties.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
-                properties.put(REPOSTS, post.getDegree() - 1 - post.getDegree(RelationshipTypes.LIKES));
+                properties.put(REPOSTS, post.getDegree(Direction.INCOMING)
+                        - 1 // for the Posted Relationship Type
+                        - post.getDegree(RelationshipTypes.LIKES)
+                        - post.getDegree(RelationshipTypes.REPLIED_TO));
                 if (user != null) {
                     properties.put(LIKED, userLikesPost(user, post));
                     properties.put(REPOSTED, userRepostedPost(user, post));

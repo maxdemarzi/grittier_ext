@@ -168,6 +168,5 @@ public class Tags {
         }
 
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
-
     }
 }
