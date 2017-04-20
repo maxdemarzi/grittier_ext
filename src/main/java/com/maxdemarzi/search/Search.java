@@ -7,10 +7,7 @@ import com.maxdemarzi.RelationshipTypes;
 import com.maxdemarzi.users.Users;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.neo4j.collection.primitive.PrimitiveLongIterator;
-import org.neo4j.graphdb.Direction;
-import org.neo4j.graphdb.GraphDatabaseService;
-import org.neo4j.graphdb.Node;
-import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.*;
 import org.neo4j.kernel.api.ReadOperations;
 import org.neo4j.kernel.api.exceptions.index.IndexNotFoundKernelException;
 import org.neo4j.kernel.api.exceptions.schema.SchemaRuleNotFoundException;
@@ -149,8 +146,15 @@ public class Search {
 
             int counter = 0;
             while (counter < limit && highId > -1) {
-                Node post = db.getNodeById(highId);
-                highId--;
+                Node post;
+                try {
+                    post = db.getNodeById(highId);
+                } catch (NotFoundException e) {
+                    continue;
+                } finally {
+                    highId--;
+                }
+
                 if (post.getLabels().iterator().next().name().equals(Labels.Post.name())) {
                     Long time = (Long) post.getProperty("time");
                     if (time < latest) {
