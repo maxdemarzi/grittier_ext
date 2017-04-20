@@ -1,5 +1,6 @@
 package com.maxdemarzi.mentions;
 
+import com.maxdemarzi.Schema;
 import com.maxdemarzi.posts.Posts;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -18,7 +19,8 @@ public class CreateMentionsTest {
     public Neo4jRule neo4j = new Neo4jRule()
             .withFixture(FIXTURE)
             .withExtension("/v1", Posts.class)
-            .withExtension("/v1", Mentions.class);
+            .withExtension("/v1", Mentions.class)
+            .withExtension("/v1", Schema.class);
 
     @Test
     public void shouldCreateMention() throws InterruptedException {

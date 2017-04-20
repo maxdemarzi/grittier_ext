@@ -1,5 +1,6 @@
 package com.maxdemarzi.blocks;
 
+import com.maxdemarzi.Schema;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -13,7 +14,8 @@ public class GetBlocksTest {
     @Rule
     public Neo4jRule neo4j = new Neo4jRule()
             .withFixture(FIXTURE)
-            .withExtension("/v1", Blocks.class);
+            .withExtension("/v1", Blocks.class)
+            .withExtension("/v1", Schema.class);
 
     @Test
     public void shouldGetBlocks() {

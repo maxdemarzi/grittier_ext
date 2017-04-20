@@ -166,7 +166,10 @@ public class Search {
                         properties.put(NAME, author.getProperty(NAME));
                         properties.put(HASH, author.getProperty(HASH));
                         properties.put(LIKES, post.getDegree(RelationshipTypes.LIKES));
-                        properties.put(REPOSTS, post.getDegree() - 1 - post.getDegree(RelationshipTypes.LIKES));
+                        properties.put(REPOSTS, post.getDegree(Direction.INCOMING)
+                                - 1 // for the Posted Relationship Type
+                                - post.getDegree(RelationshipTypes.LIKES)
+                                - post.getDegree(RelationshipTypes.REPLIED_TO));
                         if (user != null) {
                             properties.put(LIKED, userLikesPost(user, post));
                             properties.put(REPOSTED, userRepostedPost(user, post));

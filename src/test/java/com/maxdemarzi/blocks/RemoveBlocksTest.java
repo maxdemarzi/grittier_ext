@@ -1,5 +1,6 @@
 package com.maxdemarzi.blocks;
 
+import com.maxdemarzi.Schema;
 import com.sun.jersey.api.client.UniformInterfaceException;
 import org.junit.Assert;
 import org.junit.Rule;
@@ -14,7 +15,8 @@ public class RemoveBlocksTest {
     @Rule
     public Neo4jRule neo4j = new Neo4jRule()
             .withFixture(FIXTURE)
-            .withExtension("/v1", Blocks.class);
+            .withExtension("/v1", Blocks.class)
+            .withExtension("/v1", Schema.class);
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
