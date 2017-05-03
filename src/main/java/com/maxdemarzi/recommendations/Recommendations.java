@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.concurrent.atomic.LongAdder;
 
 import static com.maxdemarzi.Properties.EMAIL;
+import static com.maxdemarzi.Properties.I_FOLLOW;
 import static com.maxdemarzi.Properties.PASSWORD;
 import static com.maxdemarzi.users.Users.findUser;
 import static java.util.Collections.reverseOrder;
@@ -79,12 +80,17 @@ public class Recommendations {
                 }
             }
             fofs.remove(user);
+            for (Node user2 : following) {
+                fofs.remove(user2);
+            }
+
             ArrayList<Map.Entry<Node, LongAdder>> fofList = new ArrayList<>(fofs.entrySet());
             fofList.sort(Comparator.comparing(m -> (Long) m.getValue().longValue(), reverseOrder()));
             for (Map.Entry<Node, LongAdder> entry : fofList.subList(0, Math.min(fofList.size(), limit))) {
                 Map<String, Object> properties = entry.getKey().getAllProperties();
                 properties.remove(PASSWORD);
                 properties.remove(EMAIL);
+                properties.put(I_FOLLOW, false);
                 results.add(properties);
             }
 

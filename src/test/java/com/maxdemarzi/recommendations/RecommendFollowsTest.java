@@ -57,10 +57,12 @@ public class RecommendFollowsTest {
         add(new HashMap<String, Object>() {{
             put("username", "markhneedham");
             put("name", "Mark Needham");
+            put("i_follow", false);
         }});
         add(new HashMap<String, Object>() {{
             put("username", "darthvader42");
             put("name", "Stefan Armbruster");
+            put("i_follow", false);
         }});
 
     }};
