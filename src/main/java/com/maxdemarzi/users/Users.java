@@ -1,14 +1,15 @@
 package com.maxdemarzi.users;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.maxdemarzi.Labels;
 import com.maxdemarzi.RelationshipTypes;
 import com.maxdemarzi.posts.PostExceptions;
 import org.apache.shiro.crypto.hash.Md5Hash;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.graphdb.*;
 
-import javax.ws.rs.*;
 import javax.ws.rs.Path;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -25,16 +26,21 @@ import static java.util.Collections.reverseOrder;
 @Path("/users")
 public class Users {
 
+    private final GraphDatabaseService db;
     private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    public Users(@Context DatabaseManagementService dbms ) {
+        this.db = dbms.database( "neo4j" );;
+    }
 
     @GET
     @Path("/{username}")
-    public Response getUser(@PathParam("username") final String username, @Context GraphDatabaseService db) throws IOException {
+    public Response getUser(@PathParam("username") final String username) throws IOException {
         Map<String, Object> results;
         try (Transaction tx = db.beginTx()) {
-            Node user = findUser(username, db);
+            Node user = findUser(username, tx);
             results = user.getAllProperties();
-            tx.success();
+            tx.commit();
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
@@ -42,15 +48,14 @@ public class Users {
     @GET
     @Path("/{username}/profile")
     public Response getProfile(@PathParam("username") final String username,
-                               @QueryParam("username2") final String username2,
-                               @Context GraphDatabaseService db) throws IOException {
+                               @QueryParam("username2") final String username2) throws IOException {
         Map<String, Object> results;
         try (Transaction tx = db.beginTx()) {
-            Node user = findUser(username, db);
+            Node user = findUser(username, tx);
             results = getUserAttributes(user);
 
             if (username2 != null && !username.equals(username2)) {
-                Node user2 = findUser(username2, db);
+                Node user2 = findUser(username2, tx);
                 HashSet<Node> followed = new HashSet<>();
                 for (Relationship r1 : user.getRelationships(Direction.OUTGOING, RelationshipTypes.FOLLOWS)) {
                     followed.add(r1.getEndNode());
@@ -83,21 +88,21 @@ public class Users {
 
             }
 
-            tx.success();
+            tx.commit();
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
 
     @POST
-    public Response createUser(String body, @Context GraphDatabaseService db) throws IOException {
+    public Response createUser(String body) throws IOException {
         HashMap parameters = UserValidator.validate(body);
         Map<String, Object> results;
         try (Transaction tx = db.beginTx()) {
-            Node user = db.findNode(Labels.User, USERNAME, parameters.get(USERNAME));
+            Node user = tx.findNode(Labels.User, USERNAME, parameters.get(USERNAME));
             if (user == null) {
-                user = db.findNode(Labels.User, EMAIL, parameters.get(EMAIL));
+                user = tx.findNode(Labels.User, EMAIL, parameters.get(EMAIL));
                 if (user == null) {
-                    user = db.createNode(Labels.User);
+                    user = tx.createNode(Labels.User);
                     user.setProperty(EMAIL, parameters.get(EMAIL));
                     user.setProperty(NAME, parameters.get(NAME));
                     user.setProperty(USERNAME, parameters.get(USERNAME));
@@ -109,12 +114,12 @@ public class Users {
 
                     results = user.getAllProperties();
                 } else {
-                    throw UserExceptions.existingEmailParameter;
+                    throw UserExceptions.existingEmailParameter();
                 }
             } else {
-                throw UserExceptions.existingUsernameParameter;
+                throw UserExceptions.existingUsernameParameter();
             }
-            tx.success();
+            tx.commit();
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
@@ -123,8 +128,7 @@ public class Users {
     @Path("/{username}/followers")
     public Response getFollowers(@PathParam("username") final String username,
                                  @QueryParam("limit") @DefaultValue("25") final Integer limit,
-                                 @QueryParam("since") final Long since,
-                                 @Context GraphDatabaseService db) throws IOException {
+                                 @QueryParam("since") final Long since) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
         // TODO: 4/3/17 Add Recent Array for Users with > 100k Followers
         LocalDateTime dateTime;
@@ -136,7 +140,7 @@ public class Users {
         Long latest = dateTime.toEpochSecond(ZoneOffset.UTC);
 
         try (Transaction tx = db.beginTx()) {
-            Node user = findUser(username, db);
+            Node user = findUser(username, tx);
             for (Relationship r1: user.getRelationships(Direction.INCOMING, RelationshipTypes.FOLLOWS)) {
                 Long time = (Long)r1.getProperty(TIME);
                 if(time < latest) {
@@ -146,7 +150,7 @@ public class Users {
                     results.add(result);
                 }
             }
-            tx.success();
+            tx.commit();
         }
         results.sort(Comparator.comparing(m -> (Long) m.get(TIME), reverseOrder()));
 
@@ -159,8 +163,7 @@ public class Users {
     @Path("/{username}/following")
     public Response getFollowing(@PathParam("username") final String username,
                                  @QueryParam("limit") @DefaultValue("25") final Integer limit,
-                                 @QueryParam("since") final Long since,
-                                 @Context GraphDatabaseService db) throws IOException {
+                                 @QueryParam("since") final Long since) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
         LocalDateTime dateTime;
         if (since == null) {
@@ -172,7 +175,7 @@ public class Users {
 
 
         try (Transaction tx = db.beginTx()) {
-            Node user = findUser(username, db);
+            Node user = findUser(username, tx);
             for (Relationship r1: user.getRelationships(Direction.OUTGOING, RelationshipTypes.FOLLOWS)) {
                 Long time = (Long)r1.getProperty(TIME);
                 if(time < latest) {
@@ -182,7 +185,7 @@ public class Users {
                     results.add(result);
                 }
             }
-            tx.success();
+            tx.commit();
         }
         results.sort(Comparator.comparing(m -> (Long) m.get(TIME), reverseOrder()));
 
@@ -194,14 +197,13 @@ public class Users {
     @POST
     @Path("/{username}/follows/{username2}")
     public Response createFollows(@PathParam("username") final String username,
-                                 @PathParam("username2") final String username2,
-                                 @Context GraphDatabaseService db) throws IOException {
+                                 @PathParam("username2") final String username2) throws IOException {
         Map<String, Object> results;
         try (Transaction tx = db.beginTx()) {
-            Node user = findUser(username, db);
-            Node user2 = findUser(username2, db);
+            Node user = findUser(username, tx);
+            Node user2 = findUser(username2, tx);
             if (user.equals(user2)) {
-                throw UserExceptions.userSame;
+                throw UserExceptions.userSame();
             } else {
                 HashSet<Node> blocked = new HashSet<>();
                 for (Relationship r1 : user2.getRelationships(Direction.OUTGOING, RelationshipTypes.BLOCKS)) {
@@ -209,7 +211,7 @@ public class Users {
                 }
 
                 if (blocked.contains(user)) {
-                    throw UserExceptions.userBlocked;
+                    throw UserExceptions.userBlocked();
                 }
 
                 Relationship follows = user.createRelationshipTo(user2, RelationshipTypes.FOLLOWS);
@@ -218,7 +220,7 @@ public class Users {
                 results = user2.getAllProperties();
                 results.remove(EMAIL);
                 results.remove(PASSWORD);
-                tx.success();
+                tx.commit();
             }
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
@@ -227,12 +229,11 @@ public class Users {
     @DELETE
     @Path("/{username}/follows/{username2}")
     public Response removeFollows(@PathParam("username") final String username,
-                                  @PathParam("username2") final String username2,
-                                  @Context GraphDatabaseService db) throws IOException {
+                                  @PathParam("username2") final String username2) throws IOException {
         Map<String, Object> results;
         try (Transaction tx = db.beginTx()) {
-            Node user = findUser(username, db);
-            Node user2 = findUser(username2, db);
+            Node user = findUser(username, tx);
+            Node user2 = findUser(username2, tx);
 
             if (user.getDegree(RelationshipTypes.FOLLOWS, Direction.OUTGOING)
                     < user2.getDegree(RelationshipTypes.FOLLOWS, Direction.INCOMING)) {
@@ -249,15 +250,15 @@ public class Users {
                 }
             }
 
-            tx.success();
+            tx.commit();
         }
         return Response.noContent().build();
     }
 
-    public static Node findUser(String username, @Context GraphDatabaseService db) {
+    public static Node findUser(String username, Transaction tx) {
         if (username == null) { return null; }
-        Node user = db.findNode(Labels.User, USERNAME, username);
-        if (user == null) { throw UserExceptions.userNotFound; }
+        Node user = tx.findNode(Labels.User, USERNAME, username);
+        if (user == null) { throw UserExceptions.userNotFound(); }
         return user;
     }
 
@@ -289,7 +290,7 @@ public class Users {
                 break;
             }
         }
-        if(post == null) { throw PostExceptions.postNotFound; };
+        if(post == null) { throw PostExceptions.postNotFound(); };
 
         return post;
     }

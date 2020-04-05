@@ -1,12 +1,10 @@
 package com.maxdemarzi.blocks;
 
 import com.maxdemarzi.Schema;
-import com.sun.jersey.api.client.UniformInterfaceException;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.neo4j.harness.junit.Neo4jRule;
+import org.neo4j.harness.junit.rule.Neo4jRule;
 import org.neo4j.test.server.HTTP;
 
 import java.util.HashMap;
@@ -15,23 +13,18 @@ public class RemoveBlocksTest {
     @Rule
     public Neo4jRule neo4j = new Neo4jRule()
             .withFixture(FIXTURE)
-            .withExtension("/v1", Blocks.class)
-            .withExtension("/v1", Schema.class);
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
+            .withUnmanagedExtension("/v1", Blocks.class)
+            .withUnmanagedExtension("/v1", Schema.class);
 
     @Test
     public void shouldRemoveBlock() {
         HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
-        thrown.expect(UniformInterfaceException.class);
         HTTP.request("DELETE", neo4j.httpURI().resolve("/v1/users/maxdemarzi/blocks/jexp").toString(), null);
     }
 
     @Test
     public void shouldRemoveBlockToo() {
         HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
-        thrown.expect(UniformInterfaceException.class);
         HTTP.request("DELETE", neo4j.httpURI().resolve("/v1/users/jexp/blocks/laexample").toString(), null);
     }
 
@@ -56,7 +49,7 @@ public class RemoveBlocksTest {
     }
 
     @Test
-    public void shouldNotRemoveLikeBlockNotFound() {
+    public void shouldNotRemoveBlockNotFound() {
         HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
 
         HTTP.Response response = HTTP.request("DELETE", neo4j.httpURI().resolve("/v1/users/maxdemarzi/blocks/laexample").toString(), null);

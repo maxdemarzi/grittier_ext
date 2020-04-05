@@ -6,7 +6,9 @@ import javax.ws.rs.core.Response;
 
 public class Exceptions extends WebApplicationException {
 
-    public static final Exceptions invalidInput = new Exceptions(400, "Invalid Input");
+    public static final Exceptions invalidInput() {
+        return new Exceptions(400, "Invalid Input");
+    }
 
     public Exceptions(int code, String error) {
         super(new Throwable(error), Response.status(code)
@@ -15,4 +17,6 @@ public class Exceptions extends WebApplicationException {
                 .build());
 
     }
+
+
 }

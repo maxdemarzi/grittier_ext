@@ -1,13 +1,14 @@
 package com.maxdemarzi.mentions;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.maxdemarzi.Labels;
 import com.maxdemarzi.RelationshipTypes;
 import com.maxdemarzi.users.Users;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.graphdb.*;
 
-import javax.ws.rs.*;
 import javax.ws.rs.Path;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -18,7 +19,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import static com.maxdemarzi.Properties.*;
-import static com.maxdemarzi.Time.*;
+import static com.maxdemarzi.Time.dateFormatter;
+import static com.maxdemarzi.Time.utc;
 import static com.maxdemarzi.likes.Likes.userLikesPost;
 import static com.maxdemarzi.posts.Posts.getAuthor;
 import static com.maxdemarzi.posts.Posts.userRepostedPost;
@@ -29,14 +31,18 @@ public class Mentions {
 
     private static final Pattern mentionsPattern = Pattern.compile("@(\\S+)");
 
+    private final GraphDatabaseService db;
     private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    public Mentions(@Context DatabaseManagementService dbms ) {
+        this.db = dbms.database( "neo4j" );;
+    }
 
     @GET
     public Response getMentions(@PathParam("username") final String username,
                                 @QueryParam("limit") @DefaultValue("25") final Integer limit,
                                 @QueryParam("since") final Long since,
-                                @QueryParam("username2") final String username2,
-                                @Context GraphDatabaseService db) throws IOException {
+                                @QueryParam("username2") final String username2) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
         LocalDateTime dateTime;
         if (since == null) {
@@ -47,10 +53,10 @@ public class Mentions {
         Long latest = dateTime.toEpochSecond(ZoneOffset.UTC);
 
         try (Transaction tx = db.beginTx()) {
-            Node user = Users.findUser(username, db);
+            Node user = Users.findUser(username, tx);
             Node user2 = null;
             if (username2 != null) {
-                user2 = Users.findUser(username2, db);
+                user2 = Users.findUser(username2, tx);
             }
 
             HashSet<Node> blocked = new HashSet<>();
@@ -91,7 +97,7 @@ public class Mentions {
                 }
                 dateTime = dateTime.minusDays(1);
             }
-            tx.success();
+            tx.commit();
         }
 
         results.sort(Comparator.comparing(m -> (Long) m.get(TIME), reverseOrder()));
@@ -99,7 +105,7 @@ public class Mentions {
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
 
-    public static void createMentions(Node post, HashMap<String, Object> input, LocalDateTime dateTime, GraphDatabaseService db) {
+    public static void createMentions(Node post, HashMap<String, Object> input, LocalDateTime dateTime, Transaction tx) {
         Matcher mat = mentionsPattern.matcher(((String)input.get("status")).toLowerCase());
 
         for (Relationship r1 : post.getRelationships(Direction.OUTGOING, RelationshipType.withName("MENTIONED_ON_" +
@@ -110,7 +116,7 @@ public class Mentions {
         Set<Node> mentioned = new HashSet<>();
         while (mat.find()) {
             String username = mat.group(1);
-            Node user = db.findNode(Labels.User, USERNAME, username);
+            Node user = tx.findNode(Labels.User, USERNAME, username);
             if (user != null && !mentioned.contains(user)) {
                 Relationship r1 = post.createRelationshipTo(user, RelationshipType.withName("MENTIONED_ON_" +
                         dateTime.format(dateFormatter)));

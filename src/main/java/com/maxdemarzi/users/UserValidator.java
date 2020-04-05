@@ -1,7 +1,7 @@
 package com.maxdemarzi.users;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.maxdemarzi.Exceptions;
-import org.codehaus.jackson.map.ObjectMapper;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -17,53 +17,53 @@ public class UserValidator {
         HashMap input;
 
         if ( body == null) {
-            throw Exceptions.invalidInput;
+            throw Exceptions.invalidInput();
         }
 
         // Parse the input
         try {
             input = objectMapper.readValue(body, HashMap.class);
         } catch (Exception e) {
-            throw Exceptions.invalidInput;
+            throw Exceptions.invalidInput();
         }
 
         if (!input.containsKey(USERNAME)) {
-            throw UserExceptions.missingUsernameParameter;
+            throw UserExceptions.missingUsernameParameter();
         } else {
             String username = (String)input.get(USERNAME);
             if (username.equals("")) {
-                throw UserExceptions.emptyUsernameParameter;
+                throw UserExceptions.emptyUsernameParameter();
             } else if (!username.matches(usernamePattern)) {
-                throw UserExceptions.invalidUsernameParameter;
+                throw UserExceptions.invalidUsernameParameter();
             }
         }
 
         if (!input.containsKey(EMAIL)) {
-            throw UserExceptions.missingEmailParameter;
+            throw UserExceptions.missingEmailParameter();
         } else {
             String email = (String)input.get(EMAIL);
             if (email.equals("")) {
-                throw UserExceptions.emptyEmailParameter;
+                throw UserExceptions.emptyEmailParameter();
             } else if (!email.contains("@")) {
-                throw UserExceptions.invalidEmailParameter;
+                throw UserExceptions.invalidEmailParameter();
             }
         }
 
         if (!input.containsKey(NAME)) {
-            throw UserExceptions.missingNameParameter;
+            throw UserExceptions.missingNameParameter();
         } else {
             String email = (String) input.get(NAME);
             if (email.equals("")) {
-                throw UserExceptions.emptyNameParameter;
+                throw UserExceptions.emptyNameParameter();
             }
         }
 
         if (!input.containsKey(PASSWORD)) {
-            throw UserExceptions.missingPasswordParameter;
+            throw UserExceptions.missingPasswordParameter();
         } else {
             String email = (String) input.get(PASSWORD);
             if (email.equals("")) {
-                throw UserExceptions.emptyPasswordParameter;
+                throw UserExceptions.emptyPasswordParameter();
             }
         }
                 return input;

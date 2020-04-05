@@ -1,12 +1,13 @@
 package com.maxdemarzi.likes;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.maxdemarzi.RelationshipTypes;
 import com.maxdemarzi.users.Users;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.graphdb.*;
 
-import javax.ws.rs.*;
 import javax.ws.rs.Path;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -27,22 +28,26 @@ import static java.util.Collections.reverseOrder;
 @Path("/users/{username}/likes")
 public class Likes {
 
+    private final GraphDatabaseService db;
     private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    public Likes(@Context DatabaseManagementService dbms ) {
+        this.db = dbms.database( "neo4j" );;
+    }
 
     @GET
     public Response getLikes(@PathParam("username") final String username,
                              @QueryParam("limit") @DefaultValue("25") final Integer limit,
                              @QueryParam("since") final Long since,
-                             @QueryParam("username2") final String username2,
-                             @Context GraphDatabaseService db) throws IOException {
+                             @QueryParam("username2") final String username2) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
         Long latest = getLatestTime(since);
 
         try (Transaction tx = db.beginTx()) {
-            Node user = Users.findUser(username, db);
+            Node user = Users.findUser(username, tx);
             Node user2 = null;
             if (username2 != null) {
-                user2 = Users.findUser(username2, db);
+                user2 = Users.findUser(username2, tx);
             }
             for (Relationship r1 : user.getRelationships(Direction.OUTGOING, RelationshipTypes.LIKES)) {
                 Node post = r1.getEndNode();
@@ -63,7 +68,7 @@ public class Likes {
                     results.add(properties);
                 }
             }
-            tx.success();
+            tx.commit();
         }
 
         results.sort(Comparator.comparing(m -> (Long) m.get(LIKED_TIME), reverseOrder()));
@@ -77,17 +82,16 @@ public class Likes {
     @Path("/{username2}/{time}")
     public Response createLike(@PathParam("username") final String username,
                                @PathParam("username2") final String username2,
-                               @PathParam("time") final Long time,
-                               @Context GraphDatabaseService db) throws IOException {
+                               @PathParam("time") final Long time) throws IOException {
         Map<String, Object> results;
 
         try (Transaction tx = db.beginTx()) {
-            Node user = Users.findUser(username, db);
-            Node user2 = Users.findUser(username2, db);
+            Node user = Users.findUser(username, tx);
+            Node user2 = Users.findUser(username2, tx);
             Node post = getPost(user2, time);
 
             if (userLikesPost(user, post)) {
-                throw LikeExceptions.alreadyLikesPost;
+                throw LikeExceptions.alreadyLikesPost();
             }
 
             Relationship like = user.createRelationshipTo(post, RelationshipTypes.LIKES);
@@ -103,7 +107,7 @@ public class Likes {
                     - post.getDegree(RelationshipTypes.REPLIED_TO));
             results.put(LIKED, true);
             results.put(REPOSTED, userRepostedPost(user, post));
-            tx.success();
+            tx.commit();
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
@@ -112,12 +116,11 @@ public class Likes {
     @Path("/{username2}/{time}")
     public Response removeLike(@PathParam("username") final String username,
                                @PathParam("username2") final String username2,
-                               @PathParam("time") final Long time,
-                               @Context GraphDatabaseService db) throws IOException {
+                               @PathParam("time") final Long time) throws IOException {
         boolean liked = false;
         try (Transaction tx = db.beginTx()) {
-            Node user = Users.findUser(username, db);
-            Node user2 = Users.findUser(username2, db);
+            Node user = Users.findUser(username, tx);
+            Node user2 = Users.findUser(username2, tx);
             Node post = getPost(user2, time);
 
             if (user.getDegree(RelationshipTypes.LIKES, Direction.OUTGOING)
@@ -138,11 +141,11 @@ public class Likes {
                     }
                 }
             }
-            tx.success();
+            tx.commit();
         }
 
         if(!liked) {
-            throw LikeExceptions.notLikingPost;
+            throw LikeExceptions.notLikingPost();
         }
 
         return Response.noContent().build();

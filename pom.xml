@@ -10,47 +10,32 @@
 
 
     <properties>
-        <neo4j.version>3.1.2</neo4j.version>
-        <junit.version>4.12</junit.version>
+        <neo4j.version>4.0.3</neo4j.version>
+        <jaxrs.version>2.1.1</jaxrs.version>
+        <jackson.version>2.10.2</jackson.version>
+        <junit.version>4.13</junit.version>
+        <jersey.version>2.27</jersey.version>
+        <jacoco.version>0.8.5</jacoco.version>
+        <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <jacoco.version>0.7.9</jacoco.version>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-enterprise</artifactId>
-            <version>${neo4j.version}</version>
+            <groupId>javax.ws.rs</groupId>
+            <artifactId>javax.ws.rs-api</artifactId>
+            <version>${jaxrs.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>org.neo4j</groupId>
-            <artifactId>server-api</artifactId>
+            <artifactId>neo4j</artifactId>
             <version>${neo4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.neo4j.app</groupId>
-            <artifactId>neo4j-server</artifactId>
-            <version>${neo4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-kernel</artifactId>
-            <version>${neo4j.version}</version>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.neo4j</groupId>
-            <artifactId>neo4j-io</artifactId>
-            <version>${neo4j.version}</version>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.neo4j.app</groupId>
-            <artifactId>neo4j-server</artifactId>
-            <version>${neo4j.version}</version>
-            <type>test-jar</type>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.neo4j.test</groupId>

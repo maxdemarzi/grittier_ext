@@ -3,7 +3,7 @@ package com.maxdemarzi.users;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
-import org.neo4j.harness.junit.Neo4jRule;
+import org.neo4j.harness.junit.rule.Neo4jRule;
 import org.neo4j.test.server.HTTP;
 
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ public class GetFollowersTest {
     @Rule
     public Neo4jRule neo4j = new Neo4jRule()
             .withFixture(FIXTURE)
-            .withExtension("/v1", Users.class);
+            .withUnmanagedExtension("/v1", Users.class);
 
     @Test
     public void shouldGetFollowers() {

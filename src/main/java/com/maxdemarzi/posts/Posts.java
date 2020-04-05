@@ -1,15 +1,16 @@
 package com.maxdemarzi.posts;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.maxdemarzi.Labels;
 import com.maxdemarzi.RelationshipTypes;
 import com.maxdemarzi.mentions.Mentions;
 import com.maxdemarzi.tags.Tags;
 import com.maxdemarzi.users.Users;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.graphdb.*;
 
-import javax.ws.rs.*;
 import javax.ws.rs.Path;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -22,7 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.maxdemarzi.Properties.*;
-import static com.maxdemarzi.Time.*;
+import static com.maxdemarzi.Time.dateFormatter;
+import static com.maxdemarzi.Time.utc;
 import static com.maxdemarzi.likes.Likes.userLikesPost;
 import static com.maxdemarzi.users.Users.getPost;
 import static java.util.Collections.reverseOrder;
@@ -30,14 +32,18 @@ import static java.util.Collections.reverseOrder;
 @Path("/users/{username}/posts")
 public class Posts {
 
+    private final GraphDatabaseService db;
     private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    public Posts(@Context DatabaseManagementService dbms ) {
+        this.db = dbms.database( "neo4j" );;
+    }
 
     @GET
     public Response getPosts(@PathParam("username") final String username,
                              @QueryParam("limit") @DefaultValue("25") final Integer limit,
                              @QueryParam("since") final Long since,
-                             @QueryParam("username2") final String username2,
-                             @Context GraphDatabaseService db) throws IOException {
+                             @QueryParam("username2") final String username2) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
         LocalDateTime dateTime;
         if (since == null) {
@@ -48,10 +54,10 @@ public class Posts {
         Long latest = dateTime.toEpochSecond(ZoneOffset.UTC);
 
         try (Transaction tx = db.beginTx()) {
-            Node user = Users.findUser(username, db);
+            Node user = Users.findUser(username, tx);
             Node user2 = null;
             if (username2 != null) {
-                user2 = Users.findUser(username2, db);
+                user2 = Users.findUser(username2, tx);
             }
 
             Map userProperties = user.getAllProperties();
@@ -85,7 +91,7 @@ public class Posts {
                 }
                 dateTime = dateTime.minusDays(1);
             }
-            tx.success();
+            tx.commit();
         }
 
         results.sort(Comparator.comparing(m -> (Long) m.get(TIME), reverseOrder()));
@@ -94,15 +100,16 @@ public class Posts {
     }
 
     @POST
-    public Response createPost(String body, @PathParam("username") final String username,
-                               @Context GraphDatabaseService db) throws IOException {
-        Map<String, Object> results;
+    public Response createPost(String body, @PathParam("username") final String username) throws IOException {
+        Map<String, Object> results = new HashMap<>();
         HashMap<String, Object> input = PostValidator.validate(body);
         LocalDateTime dateTime = LocalDateTime.now(utc);
 
         try (Transaction tx = db.beginTx()) {
-            Node user = Users.findUser(username, db);
-            Node post = createPost(db, input, user, dateTime);
+            Node user = Users.findUser(username, tx);
+            Node post = createPost(tx, input, user, dateTime);
+            Tags.createTags(post, input, dateTime, tx);
+            Mentions.createMentions(post, input, dateTime, tx);
             results = post.getAllProperties();
             results.put(USERNAME, username);
             results.put(NAME, user.getProperty(NAME));
@@ -110,40 +117,38 @@ public class Posts {
             results.put(REPOSTS, 0);
             results.put(LIKES, 0);
 
-            tx.success();
+            tx.commit();
+        } catch (Exception ex) {
+            System.out.println(ex.toString());
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
 
-    private Node createPost(@Context GraphDatabaseService db, HashMap input, Node user, LocalDateTime dateTime) {
-        Node post = db.createNode(Labels.Post);
+    private Node createPost(Transaction tx, HashMap input, Node user, LocalDateTime dateTime) {
+        Node post = tx.createNode(Labels.Post);
         post.setProperty(STATUS, input.get("status"));
         post.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
         Relationship r1 = user.createRelationshipTo(post, RelationshipType.withName("POSTED_ON_" +
                         dateTime.format(dateFormatter)));
         r1.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
-        Tags.createTags(post, input, dateTime, db);
-        Mentions.createMentions(post, input, dateTime, db);
         return post;
     }
-
 
     @PUT
     @Path("/{time}")
     public Response updatePost(String body,
                                @PathParam("username") final String username,
-                               @PathParam("time") final Long time,
-                               @Context GraphDatabaseService db) throws IOException {
+                               @PathParam("time") final Long time) throws IOException {
         Map<String, Object> results;
         HashMap<String, Object> input = PostValidator.validate(body);
 
         try (Transaction tx = db.beginTx()) {
-            Node user = Users.findUser(username, db);
+            Node user = Users.findUser(username, tx);
             Node post = getPost(user, time);
             post.setProperty(STATUS, input.get(STATUS));
             LocalDateTime dateTime = LocalDateTime.ofEpochSecond((Long)post.getProperty(TIME), 0, ZoneOffset.UTC);
-            Tags.createTags(post, input, dateTime, db);
-            Mentions.createMentions(post, input, dateTime, db);
+            Tags.createTags(post, input, dateTime, tx);
+            Mentions.createMentions(post, input, dateTime, tx);
             results = post.getAllProperties();
             results.put(USERNAME, username);
             results.put(NAME, user.getProperty(NAME));
@@ -152,7 +157,7 @@ public class Posts {
                     - 1 // for the Posted Relationship Type
                     - post.getDegree(RelationshipTypes.LIKES)
                     - post.getDegree(RelationshipTypes.REPLIED_TO));
-            tx.success();
+            tx.commit();
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
@@ -161,16 +166,17 @@ public class Posts {
     @Path("/{username2}/{time}/reply")
     public Response createReply(String body, @PathParam("username") final String username,
                                  @PathParam("username2") final String username2,
-                                 @PathParam("time") final Long time,
-                                 @Context GraphDatabaseService db) throws IOException {
+                                 @PathParam("time") final Long time) throws IOException {
 
         Map<String, Object> results;
         HashMap input = PostValidator.validate(body);
         LocalDateTime dateTime = LocalDateTime.now(utc);
 
         try (Transaction tx = db.beginTx()) {
-            Node user = Users.findUser(username, db);
-            Node post = createPost(db, input, user, dateTime);
+            Node user = Users.findUser(username, tx);
+            Node post = createPost(tx, input, user, dateTime);
+            Tags.createTags(post, input, dateTime, tx);
+            Mentions.createMentions(post, input, dateTime, tx);
             results = post.getAllProperties();
             results.put(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
             results.put(USERNAME, username);
@@ -178,12 +184,12 @@ public class Posts {
             results.put(REPOSTS, 0);
             results.put(LIKES, 0);
 
-            Node user2 = Users.findUser(username2, db);
+            Node user2 = Users.findUser(username2, tx);
             Node post2 = getPost(user2, time);
             Relationship r2 = post.createRelationshipTo(post2, RelationshipTypes.REPLIED_TO);
             r2.setProperty(TIME, dateTime.toEpochSecond(ZoneOffset.UTC));
 
-            tx.success();
+            tx.commit();
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
@@ -193,18 +199,17 @@ public class Posts {
     @Path("/{username2}/{time}")
     public Response createRepost(@PathParam("username") final String username,
                                @PathParam("username2") final String username2,
-                               @PathParam("time") final Long time,
-                               @Context GraphDatabaseService db) throws IOException {
+                               @PathParam("time") final Long time) throws IOException {
         Map<String, Object> results;
 
         try (Transaction tx = db.beginTx()) {
-            Node user = Users.findUser(username, db);
-            Node user2 = Users.findUser(username2, db);
+            Node user = Users.findUser(username, tx);
+            Node user2 = Users.findUser(username2, tx);
             Node post = getPost(user2, time);
 
             LocalDateTime dateTime = LocalDateTime.now(utc);
             if (userRepostedPost(user, post)) {
-                throw PostExceptions.postAlreadyReposted;
+                throw PostExceptions.postAlreadyReposted();
             } else {
                 Relationship r1 = user.createRelationshipTo(post, RelationshipType.withName("REPOSTED_ON_" +
                         dateTime.format(dateFormatter)));
@@ -223,7 +228,7 @@ public class Posts {
                 results.put(REPOSTED, true);
 
             }
-            tx.success();
+            tx.commit();
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }

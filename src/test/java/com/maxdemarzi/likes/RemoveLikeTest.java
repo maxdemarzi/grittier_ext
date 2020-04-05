@@ -1,37 +1,32 @@
 package com.maxdemarzi.likes;
 
 import com.maxdemarzi.Schema;
-import com.sun.jersey.api.client.UniformInterfaceException;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.neo4j.harness.junit.Neo4jRule;
+import org.neo4j.harness.junit.rule.Neo4jRule;
 import org.neo4j.test.server.HTTP;
 
 import java.util.HashMap;
+
+//import com.sun.jersey.api.client.UniformInterfaceException;
 
 public class RemoveLikeTest {
     @Rule
     public Neo4jRule neo4j = new Neo4jRule()
             .withFixture(FIXTURE)
-            .withExtension("/v1", Likes.class)
-            .withExtension("/v1", Schema.class);
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
+            .withUnmanagedExtension("/v1", Likes.class)
+            .withUnmanagedExtension("/v1", Schema.class);
 
     @Test
     public void shouldRemoveLike() {
         HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
-        thrown.expect(UniformInterfaceException.class);
         HTTP.request("DELETE", neo4j.httpURI().resolve("/v1/users/maxdemarzi/likes/jexp/1490140299").toString(), null);
     }
 
     @Test
     public void shouldRemoveLike2() {
         HTTP.POST(neo4j.httpURI().resolve("/v1/schema/create").toString());
-        thrown.expect(UniformInterfaceException.class);
         HTTP.request("DELETE", neo4j.httpURI().resolve("/v1/users/maxdemarzi/likes/laexample/1490208700").toString(), null);
     }
 

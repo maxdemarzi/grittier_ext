@@ -1,15 +1,16 @@
 package com.maxdemarzi.tags;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.maxdemarzi.Labels;
 import com.maxdemarzi.RelationshipTypes;
 import com.maxdemarzi.users.Users;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.graphdb.*;
 
-import javax.ws.rs.*;
 import javax.ws.rs.Path;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -34,11 +35,11 @@ public class Tags {
 
     private static final Pattern hashtagPattern = Pattern.compile("#(\\S+)");
 
+    private static GraphDatabaseService db = null;
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static GraphDatabaseService db;
 
-    public Tags(@Context GraphDatabaseService graphDatabaseService) {
-        db = graphDatabaseService;
+    public Tags(@Context DatabaseManagementService dbms ) {
+        db = dbms.database( "neo4j" );;
     }
 
     // Cache
@@ -53,7 +54,7 @@ public class Tags {
         RelationshipType tagged = RelationshipType.withName("TAGGED_ON_" +
                 dateTime.format(dateFormatter));
         try (Transaction tx = db.beginTx()) {
-            ResourceIterator<Node> tags = db.findNodes(Labels.Tag);
+            ResourceIterator<Node> tags = tx.findNodes(Labels.Tag);
             while (tags.hasNext()) {
                 Node tag = tags.next();
                 int taggings = tag.getDegree(tagged, Direction.INCOMING);
@@ -64,7 +65,7 @@ public class Tags {
                     results.add(result);
                 }
             }
-            tx.success();
+            tx.commit();
         }
 
         results.sort(Comparator.comparing(m -> (Integer) m.get(COUNT), reverseOrder()));
@@ -76,8 +77,7 @@ public class Tags {
     public Response getTags(@PathParam("hashtag") final String hashtag,
                              @QueryParam("limit") @DefaultValue("25") final Integer limit,
                              @QueryParam("since") final Long since,
-                             @QueryParam("username") final String username,
-                             @Context GraphDatabaseService db) throws IOException {
+                             @QueryParam("username") final String username) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
         LocalDateTime dateTime;
         if (since == null) {
@@ -90,10 +90,10 @@ public class Tags {
         try (Transaction tx = db.beginTx()) {
             Node user = null;
             if (username != null) {
-                user = Users.findUser(username, db);
+                user = Users.findUser(username, tx);
             }
 
-            Node tag = db.findNode(Labels.Tag, NAME, hashtag.toLowerCase());
+            Node tag = tx.findNode(Labels.Tag, NAME, hashtag.toLowerCase());
             if (tag != null) {
                 LocalDateTime earliestTag = LocalDateTime.ofEpochSecond((Long) tag.getProperty(TIME), 0, ZoneOffset.UTC);
 
@@ -128,17 +128,17 @@ public class Tags {
                     }
                     dateTime = dateTime.minusDays(1);
                 }
-                tx.success();
+                tx.commit();
                 results.sort(Comparator.comparing(m -> (Long) m.get(TIME), reverseOrder()));
             } else {
-                throw TagExceptions.tagNotFound;
+                throw TagExceptions.tagNotFound();
             }
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
 
-    public static void createTags(Node post, HashMap<String, Object>  input, LocalDateTime dateTime, GraphDatabaseService db) {
-        Matcher mat = hashtagPattern.matcher(((String)input.get("status")).toLowerCase());
+    public static void createTags(Node post, HashMap<String, Object> input, LocalDateTime dateTime, Transaction tx) {
+        Matcher mat = hashtagPattern.matcher(((String)input.get(STATUS)).toLowerCase());
         for (Relationship r1 : post.getRelationships(Direction.OUTGOING, RelationshipType.withName("TAGGED_ON_" +
                 dateTime.format(dateFormatter)))) {
             r1.delete();
@@ -146,9 +146,9 @@ public class Tags {
         Set<Node> tagged = new HashSet<>();
         while (mat.find()) {
             String tag = mat.group(1);
-            Node hashtag = db.findNode(Labels.Tag, NAME, tag);
+            Node hashtag = tx.findNode(Labels.Tag, NAME, tag);
             if (hashtag == null) {
-                hashtag = db.createNode(Labels.Tag);
+                hashtag = tx.createNode(Labels.Tag);
                 hashtag.setProperty(NAME, tag);
                 hashtag.setProperty(TIME, dateTime.truncatedTo(ChronoUnit.DAYS).toEpochSecond(ZoneOffset.UTC));
             }

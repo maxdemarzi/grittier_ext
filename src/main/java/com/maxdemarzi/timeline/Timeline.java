@@ -1,12 +1,13 @@
 package com.maxdemarzi.timeline;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.maxdemarzi.RelationshipTypes;
 import com.maxdemarzi.users.Users;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.graphdb.*;
 
-import javax.ws.rs.*;
 import javax.ws.rs.Path;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -28,13 +29,17 @@ import static java.util.Collections.reverseOrder;
 @Path("/users/{username}/timeline")
 public class Timeline {
 
+    private final GraphDatabaseService db;
     private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    public Timeline(@Context DatabaseManagementService dbms ) {
+        this.db = dbms.database( "neo4j" );;
+    }
 
     @GET
     public Response getTimeline(@PathParam("username") final String username,
                              @QueryParam("limit") @DefaultValue("100") final Integer limit,
-                             @QueryParam("since") final Long since,
-                             @Context GraphDatabaseService db) throws IOException {
+                             @QueryParam("since") final Long since) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
         LocalDateTime dateTime;
         if (since == null) {
@@ -45,7 +50,7 @@ public class Timeline {
         Long latest = dateTime.toEpochSecond(ZoneOffset.UTC);
 
         try (Transaction tx = db.beginTx()) {
-            Node user = Users.findUser(username, db);
+            Node user = Users.findUser(username, tx);
             HashSet<Long> seen = new HashSet<>();
             ArrayList<Node> follows = new ArrayList<>();
             follows.add(user); // Adding user to see their posts on timeline as well
@@ -114,7 +119,7 @@ public class Timeline {
                 }
                 dateTime = dateTime.minusDays(1);
             }
-            tx.success();
+            tx.commit();
         }
 
         results.sort(Comparator.comparing(m -> (Long) m.get("time"), reverseOrder()));

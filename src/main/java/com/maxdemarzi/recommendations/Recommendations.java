@@ -1,36 +1,39 @@
 package com.maxdemarzi.recommendations;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.maxdemarzi.RelationshipTypes;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.neo4j.dbms.api.DatabaseManagementService;
 import org.neo4j.graphdb.*;
 
-import javax.ws.rs.*;
 import javax.ws.rs.Path;
+import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.LongAdder;
 
-import static com.maxdemarzi.Properties.EMAIL;
-import static com.maxdemarzi.Properties.I_FOLLOW;
-import static com.maxdemarzi.Properties.PASSWORD;
+import static com.maxdemarzi.Properties.*;
 import static com.maxdemarzi.users.Users.findUser;
 import static java.util.Collections.reverseOrder;
 
 @Path("/users/{username}/recommendations")
 public class Recommendations {
 
+    private final GraphDatabaseService db;
     private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    public Recommendations(@Context DatabaseManagementService dbms ) {
+        this.db = dbms.database( "neo4j" );;
+    }
 
     @GET
     @Path("/friends")
     public Response recommendFriends(@PathParam("username") final String username,
-                                     @QueryParam("limit") @DefaultValue("25") final Integer limit,
-                                     @Context GraphDatabaseService db) throws IOException {
+                                     @QueryParam("limit") @DefaultValue("25") final Integer limit) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
         try (Transaction tx = db.beginTx()) {
-            Node user = findUser(username, db);
+            Node user = findUser(username, tx);
             HashSet<Long> following = new HashSet<>();
             for (Relationship r1: user.getRelationships(Direction.OUTGOING, RelationshipTypes.FOLLOWS)) {
                 following.add(r1.getEndNode().getId());
@@ -45,7 +48,7 @@ public class Recommendations {
                     results.add(properties);
                 }
             }
-            tx.success();
+            tx.commit();
         }
         return Response.ok().entity(objectMapper.writeValueAsString(
                 results.subList(0, Math.min(results.size(), limit))))
@@ -55,11 +58,10 @@ public class Recommendations {
     @GET
     @Path("/follows")
     public Response recommendFollows(@PathParam("username") final String username,
-                                     @QueryParam("limit") @DefaultValue("25") final Integer limit,
-                                     @Context GraphDatabaseService db) throws IOException {
+                                     @QueryParam("limit") @DefaultValue("25") final Integer limit) throws IOException {
         ArrayList<Map<String, Object>> results = new ArrayList<>();
         try (Transaction tx = db.beginTx()) {
-            Node user = findUser(username, db);
+            Node user = findUser(username, tx);
             HashSet<Node> following = new HashSet<>();
             for (Relationship r1: user.getRelationships(Direction.OUTGOING, RelationshipTypes.FOLLOWS)) {
                 following.add(r1.getEndNode());
@@ -94,7 +96,7 @@ public class Recommendations {
                 results.add(properties);
             }
 
-            tx.success();
+            tx.commit();
         }
         return Response.ok().entity(objectMapper.writeValueAsString(results)).build();
     }
