@@ -12,7 +12,7 @@
     <properties>
         <neo4j.version>4.0.3</neo4j.version>
         <jaxrs.version>2.1.1</jaxrs.version>
-        <jackson.version>2.10.2</jackson.version>
+        <jackson.version>2.12.7.1</jackson.version>
         <junit.version>4.13</junit.version>
         <jacoco.version>0.8.5</jacoco.version>
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
